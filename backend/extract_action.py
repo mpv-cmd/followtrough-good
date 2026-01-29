@@ -13,11 +13,13 @@ DAY_MAP = {
     "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6
 }
 
+
 def _next_weekday(from_date: datetime, weekday: int) -> datetime:
     days_ahead = (weekday - from_date.weekday()) % 7
     if days_ahead == 0:
         days_ahead = 7
     return from_date + timedelta(days=days_ahead)
+
 
 def _parse_deadline(text: str) -> str | None:
     t = (text or "").lower().strip()
@@ -32,13 +34,19 @@ def _parse_deadline(text: str) -> str | None:
     if "tomorrow" in t or "tmr" in t:
         return (now + timedelta(days=1)).date().isoformat()
 
+    # Simple weekday support (e.g. "by Monday")
+    for name, idx in DAY_MAP.items():
+        if name in t:
+            return _next_weekday(now, idx).date().isoformat()
+
     if "next week" in t:
         return (now + timedelta(days=7)).date().isoformat()
 
     return None
 
+
 def extract_actions(transcript: str) -> list[dict]:
-    actions = []
+    actions: list[dict] = []
     sentences = re.split(r"(?<=[.!?])\s+", transcript or "")
 
     for s in sentences:
@@ -54,6 +62,7 @@ def extract_actions(transcript: str) -> list[dict]:
         })
 
     return actions[:10]
+
 
 def extract_single_action(transcript: str):
     acts = extract_actions(transcript)

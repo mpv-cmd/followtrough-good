@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Approval</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <h2>Approval</h2>
+    <button onclick="loadLatest()">Load latest</button>
+    <pre id="out"></pre>
+
+    <script>
+      const API = "http://127.0.0.1:8000";
+
+      async function loadLatest() {
+        const res = await fetch(`${API}/latest`);
+        const data = await res.json();
+        document.getElementById("out").innerText = JSON.stringify(data, null, 2);
+      }
+    </script>
+  </body>
+</html>

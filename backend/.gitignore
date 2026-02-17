@@ -1,3 +1,21 @@
+# Environment
 .env
-google_token.json
-uploads/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Backend runtime files
+backend/uploads/
+backend/latest.json
+backend/token.json
+backend/google_token.json
+
+# macOS
+.DS_Store
+
+# Tauri / Desktop
+followthrough-desktop/src-tauri/target/
+followthrough-desktop/node_modules/

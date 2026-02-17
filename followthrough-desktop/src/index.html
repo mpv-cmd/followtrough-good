@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FollowThrough Desktop</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#101828;
+      --muted:#667085;
+      --border:#e6e8ee;
+      --shadow:0 10px 30px rgba(16,24,40,.08);
+      --shadow2:0 2px 10px rgba(16,24,40,.06);
+
+      --brand:#4f46e5;
+      --brand2:#4338ca;
+
+      --ok-bg:#ecfdf3;
+      --ok-tx:#027a48;
+
+      --warn-bg:#fffaeb;
+      --warn-tx:#b54708;
+
+      --low-bg:#f2f4f7;
+      --low-tx:#344054;
+
+      --dup-bg:#fef3f2;
+      --dup-tx:#b42318;
+
+      --chip:#f2f4f7;
+      --chip-border:#eaecf0;
+
+      --btn:#ffffff;
+      --btn-border:#d0d5dd;
+
+      --danger-bg:#fff1f3;
+      --danger-border:#fecdd3;
+      --danger-tx:#9f1239;
+
+      --success-bg:#ecfdf3;
+      --success-border:#abefc6;
+      --success-tx:#027a48;
+
+      --focus:0 0 0 4px rgba(79,70,229,.18);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:radial-gradient(1200px 400px at 10% -10%, rgba(79,70,229,.14), transparent 60%),
+                 radial-gradient(1000px 380px at 80% 0%, rgba(16,185,129,.10), transparent 55%),
+                 var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:24px auto;
+      padding:0 18px 40px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-right:auto;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background:linear-gradient(135deg, var(--brand), #22c55e);
+      box-shadow: var(--shadow2);
+    }
+    h1{
+      margin:0;
+      font-size:28px;
+      letter-spacing:-.3px;
+      line-height:1.1;
+    }
+    .sub{
+      margin-top:2px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:650;
+    }
+
+    .statusRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--chip);
+      border:1px solid var(--chip-border);
+      font-size:12px;
+      font-weight:800;
+      color:#344054;
+      white-space:nowrap;
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background:#98a2b3}
+    .pill.ok{background:var(--ok-bg); border-color:#d1fadf; color:var(--ok-tx)}
+    .pill.ok .dot{background:#12b76a}
+    .pill.warn{background:var(--warn-bg); border-color:#fedf89; color:var(--warn-tx)}
+    .pill.warn .dot{background:#f79009}
+    .pill.bad{background:var(--dup-bg); border-color:#fecdca; color:var(--dup-tx)}
+    .pill.bad .dot{background:#f04438}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow2);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .cardHeader h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:-.2px;
+    }
+    .cardBody{
+      padding:14px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .spacer{flex:1}
+
+    button{
+      appearance:none;
+      border:1px solid var(--btn-border);
+      background:var(--btn);
+      color:#101828;
+      border-radius:12px;
+      padding:9px 11px;
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+      box-shadow:0 1px 0 rgba(16,24,40,.04);
+      transition: transform .02s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    button:hover{box-shadow:var(--shadow2)}
+    button:active{transform: translateY(1px)}
+    button:disabled{opacity:.5; cursor:not-allowed; box-shadow:none}
+
+    button.primary{
+      border-color:rgba(79,70,229,.22);
+      background:linear-gradient(180deg, rgba(79,70,229,.12), rgba(79,70,229,.06));
+      color:var(--brand2);
+    }
+    button.danger{
+      background:var(--danger-bg);
+      border-color:var(--danger-border);
+      color:var(--danger-tx);
+    }
+    button.success{
+      background:var(--success-bg);
+      border-color:var(--success-border);
+      color:var(--success-tx);
+    }
+
+    input[type="text"], input[type="date"]{
+      border:1px solid var(--btn-border);
+      border-radius:12px;
+      padding:9px 10px;
+      font-size:13px;
+      font-weight:750;
+      outline:none;
+      background:#fff;
+    }
+    input[type="text"]:focus, input[type="date"]:focus{
+      box-shadow:var(--focus);
+      border-color:rgba(79,70,229,.35);
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:750;
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      font-weight:800;
+      font-size:13px;
+      color:#344054;
+    }
+    .toggle input{transform:scale(1.15)}
+
+    .uploadBox{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:12px;
+      border-radius:14px;
+      border:1px dashed #cfd4dc;
+      background:linear-gradient(180deg, rgba(16,185,129,.06), rgba(79,70,229,.04));
+    }
+    .uploadBox strong{font-size:13px}
+    .fileName{
+      color:#344054;
+      font-weight:850;
+      font-size:12px;
+      background:#fff;
+      border:1px solid var(--border);
+      padding:6px 10px;
+      border-radius:999px;
+      max-width:340px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:#344054;
+      font-weight:750;
+      font-size:13px;
+    }
+    .msg.ok{background:var(--ok-bg); border-color:#d1fadf; color:var(--ok-tx)}
+    .msg.warn{background:var(--warn-bg); border-color:#fedf89; color:var(--warn-tx)}
+    .msg.bad{background:var(--dup-bg); border-color:#fecdca; color:var(--dup-tx)}
+
+    details summary{
+      cursor:pointer;
+      font-weight:900;
+      color:#475467;
+      user-select:none;
+      margin-top:10px;
+    }
+    pre{
+      margin:10px 0 0;
+      padding:12px;
+      border-radius:14px;
+      background:#0b1220;
+      color:#e5e7eb;
+      border:1px solid rgba(255,255,255,.08);
+      overflow:auto;
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .actionsTop{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .counts{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .chip{
+      border-radius:999px;
+      padding:6px 10px;
+      background:var(--chip);
+      border:1px solid var(--chip-border);
+      font-size:12px;
+      font-weight:900;
+      color:#344054;
+      white-space:nowrap;
+    }
+
+    .list{
+      margin-top:12px;
+      display:grid;
+      gap:10px;
+    }
+    .item{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+    .item.auto{background:var(--ok-bg)}
+    .item.review{background:var(--warn-bg)}
+    .item.low{background:var(--low-bg)}
+    .item.dup{background:var(--dup-bg)}
+
+    .itemTop{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .title{
+      font-weight:950;
+      letter-spacing:-.15px;
+    }
+    .mini{
+      font-weight:900;
+      font-size:12px;
+      color:#344054;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(16,24,40,.08);
+      background:rgba(255,255,255,.55);
+    }
+    .mini.bad{color:var(--dup-tx); border-color:rgba(180,35,24,.25)}
+    .mini.ok{color:var(--ok-tx); border-color:rgba(2,122,72,.25)}
+    .mini.warn{color:var(--warn-tx); border-color:rgba(181,71,8,.25)}
+
+    .itemMid{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .ownerPill{
+      margin-left:auto;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .src{
+      margin-top:8px;
+      font-size:12px;
+      color:#344054;
+      opacity:.9;
+      line-height:1.35;
+    }
+    .src b{color:#101828}
+
+    a{
+      color:var(--brand2);
+      font-weight:900;
+      text-decoration:underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>FollowThrough Desktop</h1>
+          <div class="sub">Approvals that don’t waste your brain.</div>
+          <div class="statusRow">
+            <span id="pillBackend" class="pill"><span class="dot"></span>Backend: checking…</span>
+            <span id="pillGoogle" class="pill"><span class="dot"></span>Google: unknown</span>
+            <span id="pillApi" class="pill">API: <span id="apiText">127.0.0.1:8000</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <input id="workspace" type="text" placeholder="workspace (optional)" />
+        <button id="btnLoad" class="primary">Load latest</button>
+        <button id="btnReextract">Re-extract</button>
+        <button id="btnReset" class="danger">Reset approvals</button>
+        <button id="btnConnectGoogle">Connect Google</button>
+        <button id="btnSelectHigh">Select high</button>
+        <button id="btnSelectAll">Select all</button>
+        <button id="btnSelectNone">None</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: Actions -->
+      <div class="card">
+        <div class="cardHeader">
+          <h2>Actions</h2>
+          <span class="spacer"></span>
+          <div class="actionsTop">
+            <input id="filter" type="text" placeholder="Filter actions…" />
+            <label class="toggle"><input id="includeLow" type="checkbox">Include low (&lt;60%)</label>
+            <label class="toggle"><input id="autoApproveOnLoad" type="checkbox">Auto-approve ≥80% on load</label>
+            <button id="btnAutofill">Auto-fill missing deadlines (tomorrow)</button>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <div class="row">
+            <button id="btnAddSelected" class="success" disabled>✅ Add selected</button>
+            <button id="btnAddAuto" class="primary" disabled>🚀 Add all (auto)</button>
+            <span id="selectedCount" class="small">0 selected</span>
+            <span class="spacer"></span>
+            <div class="counts">
+              <span id="chipAuto" class="chip">Auto: 0 (≥80%)</span>
+              <span id="chipReview" class="chip">Needs review: 0 (60–79%)</span>
+              <span id="chipLow" class="chip">Low: 0 (&lt;60%)</span>
+              <span id="chipDup" class="chip">Duplicates: 0</span>
+              <span id="chipTh" class="chip">Threshold: 80%</span>
+            </div>
+          </div>
+
+          <div id="message" class="msg" style="margin-top:12px;">Ready.</div>
+
+          <div id="list" class="list"></div>
+
+          <details>
+            <summary>Raw API output (debug)</summary>
+            <pre id="raw">(empty)</pre>
+          </details>
+        </div>
+      </div>
+
+      <!-- Right: Upload -->
+      <div class="card">
+        <div class="cardHeader">
+          <h2>Upload audio</h2>
+          <span class="spacer"></span>
+          <span class="small">.m4a / .wav / .mp3</span>
+        </div>
+
+        <div class="cardBody">
+          <div class="uploadBox">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <strong>Drop-in upload from the desktop app</strong>
+              <span class="small">This calls <code>/upload</code> (multipart) and refreshes actions automatically.</span>
+            </div>
+            <span class="spacer"></span>
+            <span id="fileName" class="fileName">No file selected</span>
+            <input id="file" type="file" accept="audio/*,.m4a,.wav,.mp3" />
+            <button id="btnUpload" class="primary" disabled>Upload</button>
+          </div>
+
+          <div style="margin-top:12px" class="small">
+            Tip: If Connect Google opens “as a file”, you’re opening the URL inside the webview.
+            This UI uses Tauri’s <code>shell.open</code> when available so it opens in your default browser.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // Config
+    // =========================
+    const API = "http://127.0.0.1:8000";
+    const THRESHOLD = 0.80;
+
+    // =========================
+    // State
+    // =========================
+    let latest = null;
+    let selected = new Set();         // indices
+    let lastBulkResult = null;        // {created, failed}
+    let googleConnected = null;       // true/false/null (unknown)
+
+    // =========================
+    // DOM helpers
+    // =========================
+    const $ = (id) => document.getElementById(id);
+
+    function setMsg(text, kind=""){
+      const el = $("message");
+      el.className = "msg" + (kind ? " " + kind : "");
+      el.textContent = text;
+    }
+
+    function setPill(el, kind, text){
+      el.className = "pill " + (kind || "");
+      el.innerHTML = `<span class="dot"></span>${text}`;
+    }
+
+    $("apiText").textContent = API.replace("http://","");
+
+    // =========================
+    // Network
+    // =========================
+    async function api(path, opts = {}){
+      const res = await fetch(API + path, opts);
+      const text = await res.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
+      if(!res.ok){
+        const detail = (json && (json.detail || json.error)) ? (json.detail || json.error) : text;
+        throw new Error(`${res.status} ${res.statusText}: ${detail}`);
+      }
+      return json ?? text;
+    }
+
+    async function checkBackend(){
+      try{
+        // Prefer /health if you have it; fallback to /latest
+        let out;
+        try { out = await api("/health"); }
+        catch { out = await api("/latest"); }
+        setPill($("pillBackend"), "ok", `Backend: online`);
+        return true;
+      }catch(e){
+        setPill($("pillBackend"), "bad", `Backend: offline`);
+        return false;
+      }
+    }
+
+    async function checkGoogleStatus(){
+      // If your backend exposes /google_status, we’ll use it.
+      // Otherwise we keep "unknown" and only rely on connect flow + approve errors.
+      try{
+        const out = await api("/google_status");
+        if(out && typeof out.connected === "boolean"){
+          googleConnected = out.connected;
+          setPill($("pillGoogle"), out.connected ? "ok" : "warn", `Google: ${out.connected ? "connected" : "not connected"}`);
+          return;
+        }
+      }catch{
+        // keep unknown
+      }
+      googleConnected = null;
+      setPill($("pillGoogle"), "warn", "Google: unknown");
+    }
+
+    // =========================
+    // Tauri external open (prevents “opened as file”)
+    // =========================
+    async function openExternal(url){
+      try{
+        // Tauri v2 style (window.__TAURI__.shell.open)
+        if(window.__TAURI__ && window.__TAURI__.shell && typeof window.__TAURI__.shell.open === "function"){
+          await window.__TAURI__.shell.open(url);
+          return;
+        }
+      }catch{}
+      // Fallback
+      window.open(url, "_blank", "noopener");
+    }
+
+    // =========================
+    // Action helpers
+    // =========================
+    const safeStr = (x) => (x === null || x === undefined) ? "" : String(x);
+    const actionTitle = (a) => safeStr(a.action || "").trim() || "(no action text)";
+
+    function fmtPct(x){
+      if (x === null || x === undefined || Number.isNaN(Number(x))) return "—";
+      return Math.round(Number(x) * 100) + "%";
+    }
+
+    function bucket(a){
+      const c = Number(a.confidence);
+      if(!Number.isFinite(c)) return "review";
+      if(c >= THRESHOLD) return "auto";
+      if(c >= 0.60) return "review";
+      return "low";
+    }
+
+    function computeDedupeKey(a){
+      if(a && a.dedupe_key) return String(a.dedupe_key);
+      const d = safeStr(a.deadline || "").trim();
+      const t = actionTitle(a);
+      if(!d || !t) return "";
+      return `${d}|${t}`;
+    }
+
+    function getApprovedKeySet(){
+      const set = new Set();
+      if(latest && Array.isArray(latest.approved_keys)){
+        for(const k of latest.approved_keys) set.add(String(k));
+      }
+      if(latest && latest.approved_map && typeof latest.approved_map === "object"){
+        for(const k of Object.keys(latest.approved_map)) set.add(String(k));
+      }
+      return set;
+    }
+
+    function isDuplicate(i, a){
+      const k = computeDedupeKey(a);
+      const approved = getApprovedKeySet();
+      if(k && approved.has(k)) return true;
+
+      if(lastBulkResult && Array.isArray(lastBulkResult.failed)){
+        const hit = lastBulkResult.failed.find(f =>
+          Number(f.index) === Number(i) &&
+          String(f.error || "").toLowerCase().includes("duplicate")
+        );
+        if(hit) return true;
+      }
+      return false;
+    }
+
+    function shouldShowAction(a, i){
+      const f = safeStr($("filter").value).trim().toLowerCase();
+      if(f){
+        const hay = (actionTitle(a)+" "+safeStr(a.owner||"")+" "+safeStr(a.source_sentence||"")).toLowerCase();
+        if(!hay.includes(f)) return false;
+      }
+      const incLow = $("includeLow").checked;
+      if(!incLow && bucket(a) === "low") return false;
+      return true;
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, (c) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    function updateButtons(){
+      $("selectedCount").textContent = `${selected.size} selected`;
+      $("btnAddSelected").disabled = selected.size === 0;
+
+      const actions = (latest && Array.isArray(latest.actions)) ? latest.actions : [];
+      let canAuto = false;
+      for(let i=0;i<actions.length;i++){
+        const a = actions[i];
+        if(!shouldShowAction(a,i)) continue;
+        if(bucket(a)!=="auto") continue;
+        if(isDuplicate(i,a)) continue;
+        canAuto = true;
+        break;
+      }
+      $("btnAddAuto").disabled = !canAuto;
+    }
+
+    function setCounts(){
+      const actions = (latest && Array.isArray(latest.actions)) ? latest.actions : [];
+      let nAuto=0,nReview=0,nLow=0,nDup=0,nShown=0;
+      for(let i=0;i<actions.length;i++){
+        const a = actions[i];
+        if(!shouldShowAction(a,i)) continue;
+        nShown++;
+        const b = bucket(a);
+        if(b==="auto") nAuto++;
+        else if(b==="review") nReview++;
+        else nLow++;
+        if(isDuplicate(i,a)) nDup++;
+      }
+      $("chipAuto").textContent = `Auto: ${nAuto} (≥80%)`;
+      $("chipReview").textContent = `Needs review: ${nReview} (60–79%)`;
+      $("chipLow").textContent = `Low: ${nLow} (<60%)`;
+      $("chipDup").textContent = `Duplicates: ${nDup}`;
+      $("chipTh").textContent = `Threshold: ${Math.round(THRESHOLD*100)}%`;
+    }
+
+    function render(){
+      const list = $("list");
+      list.innerHTML = "";
+
+      if(!latest){
+        setCounts();
+        updateButtons();
+        return;
+      }
+
+      const actions = Array.isArray(latest.actions) ? latest.actions : [];
+      setCounts();
+
+      let any = false;
+
+      for(let i=0;i<actions.length;i++){
+        const a = actions[i];
+        if(!shouldShowAction(a,i)) continue;
+        any = true;
+
+        const b = bucket(a);
+        const dup = isDuplicate(i,a);
+
+        const item = document.createElement("div");
+        item.className = "item " + (dup ? "dup" : (b==="auto" ? "auto" : (b==="review" ? "review" : "low")));
+
+        const top = document.createElement("div");
+        top.className = "itemTop";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = selected.has(i);
+        cb.addEventListener("change", () => {
+          if(cb.checked) selected.add(i);
+          else selected.delete(i);
+          updateButtons();
+        });
+
+        const title = document.createElement("div");
+        title.className = "title";
+        title.textContent = actionTitle(a);
+
+        const badge1 = document.createElement("span");
+        badge1.className = "mini " + (dup ? "bad" : (b==="auto" ? "ok" : "warn"));
+        badge1.textContent = dup ? "Duplicate" : (b==="auto" ? "Auto" : (b==="review" ? "Review" : "Low"));
+
+        const badge2 = document.createElement("span");
+        badge2.className = "mini";
+        badge2.textContent = fmtPct(a.confidence);
+
+        const ownerWrap = document.createElement("div");
+        ownerWrap.className = "ownerPill";
+
+        const owner = document.createElement("span");
+        owner.className = "mini";
+        owner.textContent = `Owner: ${safeStr(a.owner || "—")}`;
+        ownerWrap.appendChild(owner);
+
+        top.appendChild(cb);
+        top.appendChild(title);
+        top.appendChild(badge1);
+        top.appendChild(badge2);
+        top.appendChild(ownerWrap);
+
+        const mid = document.createElement("div");
+        mid.className = "itemMid";
+
+        const lbl = document.createElement("span");
+        lbl.className = "small";
+        lbl.textContent = "Deadline:";
+
+        const date = document.createElement("input");
+        date.type = "date";
+        if(a.deadline && /^\d{4}-\d{2}-\d{2}$/.test(String(a.deadline))) date.value = String(a.deadline);
+        date.addEventListener("change", () => { a.deadline = date.value || null; });
+
+        const btnToday = document.createElement("button");
+        btnToday.textContent = "Today";
+        btnToday.addEventListener("click", () => {
+          const d = new Date();
+          const v = d.toISOString().slice(0,10);
+          date.value = v; a.deadline = v;
+        });
+
+        const btnTomorrow = document.createElement("button");
+        btnTomorrow.textContent = "Tomorrow";
+        btnTomorrow.addEventListener("click", () => {
+          const d = new Date();
+          d.setDate(d.getDate()+1);
+          const v = d.toISOString().slice(0,10);
+          date.value = v; a.deadline = v;
+        });
+
+        const btn7 = document.createElement("button");
+        btn7.textContent = "+7 days";
+        btn7.addEventListener("click", () => {
+          const d = new Date();
+          d.setDate(d.getDate()+7);
+          const v = d.toISOString().slice(0,10);
+          date.value = v; a.deadline = v;
+        });
+
+        const btnConfirm = document.createElement("button");
+        btnConfirm.className = "primary";
+        btnConfirm.textContent = date.value ? `Confirm (${date.value})` : "Confirm";
+        date.addEventListener("input", () => btnConfirm.textContent = date.value ? `Confirm (${date.value})` : "Confirm");
+        date.addEventListener("change", () => btnConfirm.textContent = date.value ? `Confirm (${date.value})` : "Confirm");
+
+        btnConfirm.addEventListener("click", async () => {
+          selected.clear(); selected.add(i); updateButtons();
+          await approveSelected();
+        });
+
+        const btnUndo = document.createElement("button");
+        btnUndo.className = "danger";
+        btnUndo.textContent = "Undo";
+        btnUndo.addEventListener("click", async () => {
+          try{
+            setMsg("Undoing…");
+            const out = await api("/undo", {
+              method:"POST",
+              headers:{"Content-Type":"application/json"},
+              body: JSON.stringify({ index: i })
+            });
+            $("raw").textContent = JSON.stringify(out, null, 2);
+            setMsg("Undo done. Reloading…", "ok");
+            await loadLatest({ autoApprove: false });
+          }catch(e){
+            $("raw").textContent = String(e);
+            setMsg(`Undo error: ${e.message}`, "bad");
+          }
+        });
+
+        // Disable undo if clearly pointless (best-effort)
+        const approvedSet = getApprovedKeySet();
+        const dk = computeDedupeKey(a);
+        btnUndo.disabled = !(dk && approvedSet.has(dk));
+
+        // Open event: if you have a real event id mapping, great.
+        // Otherwise we provide a fallback to open Google Calendar home.
+        const open = document.createElement("a");
+        open.textContent = "Open calendar";
+        open.href = "https://calendar.google.com/calendar/u/0/r";
+        open.target = "_blank";
+        open.rel = "noopener";
+        open.addEventListener("click", async (ev) => {
+          // If your backend supports /event_link?index=N, use it.
+          try{
+            const out = await api(`/event_link?index=${encodeURIComponent(i)}`);
+            if(out && out.url){
+              ev.preventDefault();
+              await openExternal(out.url);
+            }
+          }catch{
+            // ignore, default link opens calendar home
+          }
+        });
+
+        mid.appendChild(lbl);
+        mid.appendChild(date);
+        mid.appendChild(btnToday);
+        mid.appendChild(btnTomorrow);
+        mid.appendChild(btn7);
+        mid.appendChild(btnConfirm);
+        mid.appendChild(open);
+        mid.appendChild(btnUndo);
+
+        const src = document.createElement("div");
+        src.className = "src";
+        src.innerHTML = `<b>Source:</b> ${escapeHtml(safeStr(a.source_sentence || ""))}`;
+
+        item.appendChild(top);
+        item.appendChild(mid);
+        item.appendChild(src);
+
+        list.appendChild(item);
+      }
+
+      if(!any){
+        const empty = document.createElement("div");
+        empty.className = "small";
+        empty.textContent = "No actions match your filters.";
+        list.appendChild(empty);
+      }
+
+      updateButtons();
+    }
+
+    // =========================
+    // Actions (API flows)
+    // =========================
+    async function loadLatest({ autoApprove=false } = {}){
+      setMsg("Loading latest…");
+      lastBulkResult = null;
+
+      const out = await api("/latest");
+      $("raw").textContent = JSON.stringify(out, null, 2);
+
+      latest = out && out.data ? out.data : out;
+
+      // keep selection in bounds
+      const n = (latest && Array.isArray(latest.actions)) ? latest.actions.length : 0;
+      selected = new Set([...selected].filter(i => i>=0 && i<n));
+
+      setMsg(`Loaded ${n} action(s).`, "ok");
+      render();
+
+      if(autoApprove){
+        const actions = Array.isArray(latest.actions) ? latest.actions : [];
+        selected.clear();
+        for(let i=0;i<actions.length;i++){
+          const a = actions[i];
+          if(!shouldShowAction(a,i)) continue;
+          if(bucket(a)!=="auto") continue;
+          if(isDuplicate(i,a)) continue;
+          selected.add(i);
+        }
+        render();
+        if(selected.size>0){
+          await approveSelected();
+        }
+      }
+    }
+
+    async function reextract(){
+      setMsg("Re-extracting…");
+      lastBulkResult = null;
+      const out = await api("/reextract", { method:"POST" });
+      $("raw").textContent = JSON.stringify(out, null, 2);
+      setMsg("Re-extracted. Loading latest…", "ok");
+      await loadLatest({ autoApprove: $("autoApproveOnLoad").checked });
+    }
+
+    async function resetApprovals(){
+      setMsg("Resetting approvals…");
+      lastBulkResult = null;
+      const out = await api("/reset_approvals", { method:"POST" });
+      $("raw").textContent = JSON.stringify(out, null, 2);
+      selected.clear();
+      setMsg("Approvals reset. Loading latest…", "ok");
+      await loadLatest({ autoApprove:false });
+    }
+
+    function autofillMissingDeadlines(){
+      if(!latest || !Array.isArray(latest.actions)) return;
+      const d = new Date(); d.setDate(d.getDate()+1);
+      const tomorrow = d.toISOString().slice(0,10);
+      for(const a of latest.actions){
+        if(!a.deadline) a.deadline = tomorrow;
+      }
+      setMsg("Filled missing deadlines with tomorrow.", "ok");
+      render();
+    }
+
+    function selectAll(){
+      if(!latest || !Array.isArray(latest.actions)) return;
+      selected.clear();
+      for(let i=0;i<latest.actions.length;i++){
+        const a = latest.actions[i];
+        if(!shouldShowAction(a,i)) continue;
+        selected.add(i);
+      }
+      render();
+    }
+    function selectNone(){ selected.clear(); render(); }
+    function selectHigh(){
+      if(!latest || !Array.isArray(latest.actions)) return;
+      selected.clear();
+      for(let i=0;i<latest.actions.length;i++){
+        const a = latest.actions[i];
+        if(!shouldShowAction(a,i)) continue;
+        if(bucket(a)==="auto") selected.add(i);
+      }
+      render();
+    }
+
+    async function approveSelected(){
+      if(!latest || !Array.isArray(latest.actions)) return;
+      if(selected.size===0){
+        setMsg("Select at least 1 action.", "warn");
+        return;
+      }
+
+      const indices = [...selected].sort((a,b)=>a-b);
+      const deadlines = {};
+      for(const i of indices){
+        deadlines[String(i)] = safeStr(latest.actions[i].deadline || "");
+      }
+
+      const missing = indices.filter(i => !deadlines[String(i)] || !/^\d{4}-\d{2}-\d{2}$/.test(deadlines[String(i)]));
+      if(missing.length){
+        setMsg(`Missing/invalid deadline for index: ${missing.join(", ")} (set date first).`, "warn");
+        return;
+      }
+
+      setMsg(`Approving ${indices.length}…`);
+      try{
+        const out = await api("/approve_bulk", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ indices, deadlines })
+        });
+
+        lastBulkResult = out;
+        $("raw").textContent = JSON.stringify(out, null, 2);
+
+        const createdN = Array.isArray(out.created) ? out.created.length : 0;
+        const failedN  = Array.isArray(out.failed) ? out.failed.length : 0;
+        const dupN     = Array.isArray(out.failed) ? out.failed.filter(f => String(f.error||"").toLowerCase().includes("duplicate")).length : 0;
+
+        if(String(out.detail||"").toLowerCase().includes("google") || String(out.error||"").toLowerCase().includes("google")){
+          googleConnected = false;
+          setPill($("pillGoogle"), "warn", "Google: not connected");
+        }
+
+        setMsg(`Done. Created: ${createdN}. Duplicates: ${dupN}. Failed: ${failedN}. Reloading…`, createdN>0 ? "ok" : (failedN>0 ? "warn" : ""));
+        await loadLatest({ autoApprove:false });
+
+        // Clear selection after run
+        selected.clear();
+        render();
+
+      }catch(e){
+        const m = String(e.message||"");
+        if(m.toLowerCase().includes("google not connected") || m.toLowerCase().includes("auth")){
+          googleConnected = false;
+          setPill($("pillGoogle"), "warn", "Google: not connected");
+          setMsg("Google not connected. Click Connect Google first.", "warn");
+        }else{
+          setMsg(`Approve error: ${m}`, "bad");
+        }
+        throw e;
+      }
+    }
+
+    async function connectGoogle(){
+      // Open /auth/google in external browser (not inside webview)
+      setMsg("Opening Google auth in your browser…", "ok");
+      await openExternal(API + "/auth/google");
+      // After user completes auth, we can refresh status
+      setTimeout(checkGoogleStatus, 1200);
+    }
+
+    // =========================
+    // Upload audio
+    // =========================
+    function wireUpload(){
+      const file = $("file");
+      const btn = $("btnUpload");
+
+      file.addEventListener("change", () => {
+        const f = file.files && file.files[0] ? file.files[0] : null;
+        $("fileName").textContent = f ? f.name : "No file selected";
+        btn.disabled = !f;
+      });
+
+      btn.addEventListener("click", async () => {
+        const f = file.files && file.files[0] ? file.files[0] : null;
+        if(!f) return;
+
+        try{
+          setMsg("Uploading audio…");
+          const fd = new FormData();
+          fd.append("file", f);
+
+          const res = await fetch(API + "/upload", { method:"POST", body: fd });
+          const text = await res.text();
+          let out = null;
+          try{ out = JSON.parse(text); }catch{ out = { raw: text }; }
+
+          if(!res.ok){
+            const detail = out && (out.detail || out.error) ? (out.detail || out.error) : text;
+            throw new Error(`${res.status} ${res.statusText}: ${detail}`);
+          }
+
+          $("raw").textContent = JSON.stringify(out, null, 2);
+          setMsg("Upload complete. Loading latest…", "ok");
+          await loadLatest({ autoApprove: $("autoApproveOnLoad").checked });
+
+        }catch(e){
+          setMsg(`Upload error: ${e.message}`, "bad");
+        }
+      });
+    }
+
+    // =========================
+    // Wiring
+    // =========================
+    window.addEventListener("DOMContentLoaded", async () => {
+      wireUpload();
+
+      $("btnLoad").addEventListener("click", () => loadLatest({ autoApprove: $("autoApproveOnLoad").checked }));
+      $("btnReextract").addEventListener("click", reextract);
+      $("btnReset").addEventListener("click", resetApprovals);
+      $("btnConnectGoogle").addEventListener("click", connectGoogle);
+
+      $("btnSelectHigh").addEventListener("click", selectHigh);
+      $("btnSelectAll").addEventListener("click", selectAll);
+      $("btnSelectNone").addEventListener("click", selectNone);
+
+      $("btnAutofill").addEventListener("click", autofillMissingDeadlines);
+
+      $("btnAddSelected").addEventListener("click", approveSelected);
+      $("btnAddAuto").addEventListener("click", async () => { selectHigh(); await approveSelected(); });
+
+      $("filter").addEventListener("input", render);
+      $("includeLow").addEventListener("change", render);
+      $("autoApproveOnLoad").addEventListener("change", () => {
+        // no auto action here; only affects future loads
+      });
+
+      // Initial checks
+      await checkBackend();
+      await checkGoogleStatus();
+
+      // Start with latest
+      try{
+        await loadLatest({ autoApprove:false });
+      }catch(e){
+        setMsg(`Cannot load: ${e.message}`, "bad");
+      }
+    });
+  </script>
+</body>
+</html>

@@ -18,3 +18,8 @@ google_token.json
 
 # Caches
 .cache/
+__pycache__/
+*.pyc
+backend/uploads/
+backend/latest.json
+backend/token.json

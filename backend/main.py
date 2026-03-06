@@ -8,42 +8,26 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-import db
-from api import meetings
-from api import tasks
-from api import company
-from api import agent
-from api import analytics
+from backend import db
+from backend.api import meetings
+from backend.api import tasks
+from backend.api import company
+from backend.api import agent
+from backend.api import analytics
+from backend.memory_engine import get_recent_context
 
-from memory_engine import get_recent_context
-
-# semantic search is optional so server never crashes
 try:
-    from semantic_memory import semantic_search
+    from backend.semantic_memory import semantic_search
 except Exception:
     semantic_search = None
 
-
-# ----------------------------------------------------
-# ENV
-# ----------------------------------------------------
 
 load_dotenv()
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
-
-# ----------------------------------------------------
-# LOGGING
-# ----------------------------------------------------
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("followthrough")
-
-
-# ----------------------------------------------------
-# APP
-# ----------------------------------------------------
 
 app = FastAPI(
     title="FollowThrough AI",
@@ -51,11 +35,6 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url=None,
 )
-
-
-# ----------------------------------------------------
-# CORS
-# ----------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -65,28 +44,17 @@ app.add_middleware(
 )
 
 
-# ----------------------------------------------------
-# HELPERS
-# ----------------------------------------------------
-
 def _safe_workspace(name: str) -> str:
     if not name:
         return "default"
-
     name = name.strip()
-
-    if not name:
-        return "default"
-
-    return name
+    return name or "default"
 
 
-def _build_context(meetings: List[Dict[str, Any]]) -> str:
-
+def _build_context(meetings_data: List[Dict[str, Any]]) -> str:
     context_blocks = []
 
-    for m in meetings:
-
+    for m in meetings_data:
         summary = m.get("summary", "")
         actions = m.get("actions", [])
         transcript = m.get("transcript", "")
@@ -97,7 +65,7 @@ def _build_context(meetings: List[Dict[str, Any]]) -> str:
             summary_text = str(summary)
 
         actions_text = "\n".join(
-            f"- {a.get('action','Unknown action')}"
+            f"- {a.get('action', 'Unknown action')}"
             for a in actions
             if isinstance(a, dict)
         )
@@ -105,7 +73,7 @@ def _build_context(meetings: List[Dict[str, Any]]) -> str:
         transcript_snippet = transcript[:1200] if transcript else ""
 
         context_blocks.append(
-f"""
+            f"""
 Meeting Summary:
 {summary_text}
 
@@ -120,61 +88,34 @@ Transcript Snippet:
     return "\n\n---\n\n".join(context_blocks)
 
 
-# ----------------------------------------------------
-# STARTUP
-# ----------------------------------------------------
-
 @app.on_event("startup")
 def startup():
-
     logger.info("Starting FollowThrough API")
+    db.init_db()
+    logger.info("Database initialized")
 
-    try:
-        db.init_db()
-        logger.info("Database initialized")
-    except Exception as e:
-        logger.error(f"Database init failed: {e}")
-
-
-# ----------------------------------------------------
-# ROOT
-# ----------------------------------------------------
 
 @app.get("/")
 def root():
-
     return {
         "service": "FollowThrough API",
         "status": "running",
-        "environment": os.getenv("ENV", "dev")
+        "environment": os.getenv("ENV", "dev"),
     }
 
-
-# ----------------------------------------------------
-# HEALTH
-# ----------------------------------------------------
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
-# ----------------------------------------------------
-# READY (Railway / load balancer check)
-# ----------------------------------------------------
-
 @app.get("/ready")
 def ready():
     return {"ready": True}
 
 
-# ----------------------------------------------------
-# COPILOT
-# ----------------------------------------------------
-
 @app.post("/copilot")
 async def copilot(payload: Dict[str, Any], workspace: str = "default"):
-
     question = (payload.get("question") or "").strip()
 
     if not question:
@@ -184,38 +125,24 @@ async def copilot(payload: Dict[str, Any], workspace: str = "default"):
 
     logger.info(f"Copilot question received (workspace={ws})")
 
-    meetings = []
-
-    # ---------------------------------------
-    # Semantic Search (fastest)
-    # ---------------------------------------
+    meetings_data: List[Dict[str, Any]] = []
 
     if semantic_search:
-
         try:
-            meetings = semantic_search(ws, question, k=5)
+            meetings_data = semantic_search(ws, question, k=5)
         except Exception as e:
             logger.warning(f"Semantic search failed: {e}")
 
-    # ---------------------------------------
-    # Fallback to recent meetings
-    # ---------------------------------------
-
-    if not meetings:
-
+    if not meetings_data:
         try:
-            meetings = get_recent_context(ws, limit=5)
+            meetings_data = get_recent_context(ws, limit=5)
         except Exception as e:
             logger.error(f"Context retrieval failed: {e}")
 
-    if not meetings:
+    if not meetings_data:
         return {"answer": "No meetings found yet."}
 
-    # ---------------------------------------
-    # Build context
-    # ---------------------------------------
-
-    context_text = _build_context(meetings)
+    context_text = _build_context(meetings_data)
 
     prompt = f"""
 You are FollowThrough AI, an assistant for company meetings.
@@ -232,12 +159,7 @@ QUESTION:
 Provide a clear, concise, practical answer.
 """.strip()
 
-    # ---------------------------------------
-    # OpenAI
-    # ---------------------------------------
-
     try:
-
         from openai import OpenAI
 
         client = OpenAI()
@@ -245,35 +167,19 @@ Provide a clear, concise, practical answer.
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
-                {
-                    "role": "system",
-                    "content": "You analyze company meeting knowledge."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+                {"role": "system", "content": "You analyze company meeting knowledge."},
+                {"role": "user", "content": prompt},
             ],
             temperature=0.2,
         )
 
         answer = response.choices[0].message.content or "No answer generated."
-
         return {"answer": answer}
 
     except Exception as e:
-
         logger.error(f"OpenAI request failed: {e}")
+        raise HTTPException(status_code=500, detail="AI response failed")
 
-        raise HTTPException(
-            status_code=500,
-            detail="AI response failed"
-        )
-
-
-# ----------------------------------------------------
-# ROUTERS
-# ----------------------------------------------------
 
 app.include_router(meetings.router)
 app.include_router(tasks.router)

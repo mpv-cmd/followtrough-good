@@ -1,0 +1,924 @@
+{
+  "meetings": [
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, assigning Joan to prepare slides and Sarah to send a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delays if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah responsible for sending a contract.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's task to send the contract",
+          "Follow-up scheduled for next week"
+        ],
+        "risks": [
+          "Potential delays in contract sending"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed action items for the upcoming project, assigning tasks to Joan and Sarah.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow",
+          "Follow-up will occur next week"
+        ],
+        "key_points": [
+          "Preparation of slides",
+          "Sending of contract",
+          "Follow-up schedule"
+        ],
+        "risks": []
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed the preparation of slides and the sending of a contract.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow"
+        ],
+        "key_points": [
+          "Preparation of slides",
+          "Sending of contract"
+        ],
+        "risks": [
+          "No mention of who will review the slides before presentation"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, assigning Joan to prepare slides and Sarah to send a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delays if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delay if Sarah does not send the contract on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delay if Sarah does not send the contract on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed responsibilities for the upcoming project, with Joan assigned to prepare slides and Sarah tasked with sending a contract.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's task to send the contract"
+        ],
+        "risks": [
+          "Potential delays if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delays if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed responsibilities for upcoming tasks, with Joan preparing slides and Sarah sending a contract.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow",
+          "Follow-up will occur next week"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's task to send the contract"
+        ],
+        "risks": [
+          "No mention of timeline for contract approval"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delays if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed action items for the upcoming project, assigning tasks to Joan and Sarah.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow",
+          "Follow-up will occur next week"
+        ],
+        "key_points": [
+          "Preparation of slides",
+          "Sending of contract"
+        ],
+        "risks": []
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed action items for the upcoming project, assigning tasks to Joan and Sarah.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow",
+          "Follow-up will occur next week"
+        ],
+        "key_points": [
+          "Preparation of slides",
+          "Sending of contract"
+        ],
+        "risks": []
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed action items for the upcoming project, assigning tasks to Joan and Sarah.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow"
+        ],
+        "key_points": [
+          "Preparation of slides",
+          "Sending of contract"
+        ],
+        "risks": [
+          "Need for follow-up next week to ensure tasks are completed"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delay if Sarah does not send the contract on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "No mention of who will review the slides",
+          "Potential delays if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract by tomorrow.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's deadline for the contract"
+        ],
+        "risks": [
+          "Potential delay if Sarah does not send the contract on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "summary": {
+        "summary": "The team discussed tasks for the upcoming project, assigning responsibilities for slide preparation and contract submission.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send a contract tomorrow",
+          "Follow-up will occur next week"
+        ],
+        "key_points": [
+          "Slide preparation responsibility assigned to Joan",
+          "Contract to be sent by Sarah"
+        ],
+        "risks": [
+          "Potential delay if the contract is not sent on time"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": null,
+      "transcript": "Joan will prepare the slides. Sarah, you'll send a contract tomorrow. I'll follow up next week.",
+      "summary": {
+        "summary": "The team discussed responsibilities for upcoming tasks, with Joan assigned to prepare slides and Sarah tasked with sending a contract.",
+        "decisions": [
+          "Joan will prepare the slides",
+          "Sarah will send the contract tomorrow"
+        ],
+        "key_points": [
+          "Joan's responsibility for slides",
+          "Sarah's task to send the contract"
+        ],
+        "risks": [
+          "No mention of who will review the slides before the presentation"
+        ]
+      },
+      "actions": [
+        {
+          "action": "Prepare slides",
+          "owner": "Joan",
+          "deadline": null,
+          "source_sentence": "Joan will prepare the slides.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": ""
+        },
+        {
+          "action": "Send contract",
+          "owner": "Sarah",
+          "deadline": "tomorrow",
+          "source_sentence": "Sarah, you'll send a contract tomorrow.",
+          "confidence": 1.0,
+          "priority": "high",
+          "dedupe_key": "tomorrow|Send contract"
+        },
+        {
+          "action": "Follow up",
+          "owner": null,
+          "deadline": "+7 days",
+          "source_sentence": "I'll follow up next week.",
+          "confidence": 1.0,
+          "priority": "medium",
+          "dedupe_key": "+7 days|Follow up"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up",
+    "Prepare slides",
+    "Send contract",
+    "Follow up"
+  ],
+  "entities": {}
+}

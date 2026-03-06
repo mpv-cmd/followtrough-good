@@ -12,6 +12,9 @@ backend/uploads/
 backend/latest.json
 backend/token.json
 backend/google_token.json
+backend/followthrough.db
+backend/followthrough.db-wal
+backend/followthrough.db-shm
 
 # macOS
 .DS_Store
@@ -19,3 +22,4 @@ backend/google_token.json
 # Tauri / Desktop
 followthrough-desktop/src-tauri/target/
 followthrough-desktop/node_modules/
+followthrough-desktop/dist/

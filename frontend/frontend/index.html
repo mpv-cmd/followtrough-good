@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8">
+<title>FollowThrough AI</title>
+
+<style>
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+background:#f6f8fb;
+display:flex;
+height:100vh;
+}
+
+.sidebar{
+width:220px;
+background:#111827;
+color:white;
+padding:20px;
+}
+
+.sidebar h2{
+margin-top:0;
+}
+
+.sidebar button{
+display:block;
+width:100%;
+margin-top:10px;
+padding:10px;
+border:none;
+background:#1f2937;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+.sidebar button:hover{
+background:#374151;
+}
+
+.main{
+flex:1;
+padding:30px;
+overflow:auto;
+}
+
+.card{
+background:white;
+padding:16px;
+border-radius:8px;
+box-shadow:0 4px 10px rgba(0,0,0,.06);
+margin-bottom:20px;
+}
+
+pre{
+white-space:pre-wrap;
+font-size:13px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>FollowThrough</h2>
+
+<button onclick="loadDashboard()">Dashboard</button>
+<button onclick="loadInsights()">Insights</button>
+<button onclick="loadPredictions()">Predictions</button>
+<button onclick="loadTimeline()">Timeline</button>
+
+</div>
+
+<div class="main">
+
+<div class="card">
+<h3>AI Output</h3>
+<pre id="output">Welcome to FollowThrough AI</pre>
+</div>
+
+</div>
+
+<script>
+
+const API="http://127.0.0.1:8000"
+
+async function call(endpoint){
+
+const res = await fetch(API+endpoint)
+const data = await res.json()
+
+document.getElementById("output").innerText =
+JSON.stringify(data,null,2)
+
+}
+
+function loadDashboard(){
+call("/dashboard")
+}
+
+function loadInsights(){
+call("/insights")
+}
+
+function loadPredictions(){
+call("/predictions")
+}
+
+function loadTimeline(){
+call("/meeting_timeline")
+}
+
+</script>
+
+</body>
+</html>

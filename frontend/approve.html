@@ -1,394 +1,302 @@
-# --- SAFETY GUARD: prevent HTML/UI code in backend files ---
-
-
-import os
-import json
-from fastapi import FastAPI, UploadFile, File, Form, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-from datetime import datetime
-import shutil
-
-from transcribe import transcribe_file
-from extract_action import extract_actions
-from google_calendar import create_event
-
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-class Action(BaseModel):
-    action: str
-    owner: Optional[str] = None
-    deadline: Optional[str] = None
-    source_sentence: Optional[str] = None
-    confidence: Optional[float] = None
-
-
-class ApproveRequest(BaseModel):
-    indices: List[int]
-    deadlines: Dict[str, str]
-
-
-actions_cache: List[Action] = []
-approved_keys = set()
-
-
-@app.post("/upload")
-async def upload_audio(file: UploadFile = File(...)):
-    if not file.filename.endswith((".mp3", ".wav", ".m4a")):
-        return JSONResponse(status_code=400, content={"error": "Invalid file type."})
-
-    temp_path = f"temp_{file.filename}"
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    transcript = transcribe_file(temp_path)
-    os.remove(temp_path)
-
-    global actions_cache, approved_keys
-    actions_cache = extract_actions(transcript)
-    approved_keys = set()
-
-    return {"status": "ok", "data": {"actions": actions_cache}}
-
-
-@app.get("/latest")
-async def latest():
-    global actions_cache, approved_keys
-    return {
-        "status": "ok",
-        "data": {
-            "actions": actions_cache,
-            "approved_keys": list(approved_keys),
-        },
-    }
-
-
-@app.post("/approve_bulk")
-async def approve_bulk(req: ApproveRequest):
-    global actions_cache, approved_keys
-
-    created = []
-    failed = []
-
-    for idx in req.indices:
-        if idx < 0 or idx >= len(actions_cache):
-            failed.append({"index": idx, "error": "Index out of range"})
-            continue
-
-        action = actions_cache[idx]
-        deadline = req.deadlines.get(str(idx)) or action.deadline
-
-        if not deadline:
-            failed.append({"index": idx, "error": "Missing deadline"})
-            continue
-
-        key = f"{deadline}|{action.action.strip()}"
-        if key in approved_keys:
-            failed.append({"index": idx, "error": "Duplicate"})
-            continue
-
-        try:
-            event = create_event(action.action, deadline)
-            approved_keys.add(key)
-            created.append({"index": idx, "event": event})
-        except Exception as e:
-            failed.append({"index": idx, "error": str(e)})
-
-    return {"status": "bulk_done", "created": created, "failed": failed}
-
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Approval</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-  </head>
-  <body>
-    <h2>Approval</h2>
+<head>
+<meta charset="utf-8"/>
+<title>FollowThrough – Approvals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-      <button id="loadBtn" onclick="loadLatest()">Load latest</button>
+<style>
+body{
+  font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+  margin:30px;
+  background:#f7f7f7;
+}
 
-      <a href="http://127.0.0.1:8000/auth/google" target="_blank" rel="noreferrer">
-        Connect Google Calendar
-      </a>
+button{
+  padding:6px 12px;
+  cursor:pointer;
+}
 
-      <input
-        id="filter"
-        type="text"
-        placeholder="Filter actions..."
-        style="min-width:260px; padding:6px;"
-        oninput="renderFiltered()"
-      />
+.card{
+  border:1px solid #ddd;
+  background:white;
+  padding:12px;
+  margin-top:10px;
+  border-radius:6px;
+}
 
-      <button id="selAllBtn" onclick="selectAll(true)" disabled>Select all</button>
-      <button id="selNoneBtn" onclick="selectAll(false)" disabled>Select none</button>
-    </div>
+.review{
+  background:#fafafa;
+}
 
-    <pre id="out" style="white-space:pre-wrap; margin-top:10px;"></pre>
+.small{
+  font-size:12px;
+  opacity:.7;
+}
 
-    <div
-      id="card"
-      style="display:none; border:1px solid #ccc; padding:12px; margin-top:12px;"
-    >
-      <div
-        style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;"
-      >
-        <button id="addSelectedBtn" onclick="approveSelected()">✅ Add selected</button>
-        <button id="addAllBtn" onclick="approveAll()">🚀 Add all</button>
-        <span id="count" style="font-size:12px; opacity:0.8;"></span>
-      </div>
+.badge{
+  margin-left:8px;
+  font-size:12px;
+}
 
-      <div id="actions"></div>
-    </div>
+</style>
+</head>
 
-    <script>
-      const API = "http://127.0.0.1:8000";
-      let _actionsCache = [];
-      let _approvedKeys = new Set();
+<body>
 
-      function setBusy(isBusy, msg) {
-        const ids = ["loadBtn", "selAllBtn", "selNoneBtn", "addSelectedBtn", "addAllBtn"];
-        ids.forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.disabled = isBusy;
-        });
-        if (typeof msg === "string") document.getElementById("out").innerText = msg;
-      }
+<h2>FollowThrough – Approve Actions</h2>
 
-      function _isoOrBlank(v) {
-        return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "";
-      }
+<div style="display:flex;gap:10px;flex-wrap:wrap">
 
-      function _selectedIndices() {
-        const picks = Array.from(
-          document.querySelectorAll('input[type="checkbox"][id^="actPick"]')
-        );
-        return picks
-          .filter((p) => p.checked)
-          .map((p) => parseInt(p.value, 10))
-          .filter((n) => !Number.isNaN(n));
-      }
+<button id="loadBtn" onclick="loadLatest()">Load latest</button>
 
-      function selectAll(checked) {
-        Array.from(document.querySelectorAll('input[type="checkbox"][id^="actPick"]')).forEach(
-          (p) => (p.checked = checked)
-        );
-        updateCount();
-      }
+<a href="http://127.0.0.1:8000/auth/google?mode=redirect" target="_blank">
+Connect Google Calendar
+</a>
 
-      function updateCount() {
-        const total = _actionsCache.length;
-        const selected = _selectedIndices().length;
-        const el = document.getElementById("count");
-        if (el) el.innerText = `${selected}/${total} selected`;
-      }
+<input
+id="filter"
+placeholder="Filter actions..."
+style="padding:6px;min-width:240px"
+oninput="renderFiltered()"
+/>
 
-      function _dedupeKey(index) {
-        const a = _actionsCache[index] || {};
-        const title = String(a.action || "").trim();
-        const deadline = document.getElementById(`actDate${index}`)?.value || a.deadline || "";
-        return `${deadline}|${title}`;
-      }
+<button id="selAllBtn" onclick="selectAll(true)" disabled>Select all</button>
+<button id="selNoneBtn" onclick="selectAll(false)" disabled>Select none</button>
 
-      function markStatus(index, status, msg) {
-        const card = document.getElementById(`actCard${index}`);
-        const badge = document.getElementById(`actStatus${index}`);
-        if (!card || !badge) return;
+</div>
 
-        if (status === "created") {
-          badge.innerText = "✅ Created";
-          badge.style.color = "green";
-          card.style.opacity = "0.6";
-          const cb = document.getElementById(`actPick${index}`);
-          if (cb) cb.checked = false;
-        } else if (status === "duplicate") {
-          badge.innerText = "🟡 Duplicate";
-          badge.style.color = "orange";
-        } else if (status === "failed") {
-          badge.innerText = "❌ Failed";
-          badge.style.color = "red";
-          if (msg) badge.innerText += ` (${msg})`;
-        }
-        updateCount();
-      }
+<pre id="debug" style="margin-top:10px"></pre>
 
-      function applySuggested(index, dateStr) {
-        const inp = document.getElementById(`actDate${index}`);
-        if (!inp) return;
-        inp.value = dateStr || "";
-        inp.focus();
-      }
+<div id="actionsPanel" style="display:none">
 
-      function renderFiltered() {
-        const q = (document.getElementById("filter")?.value || "").toLowerCase().trim();
-        const container = document.getElementById("actions");
-        container.innerHTML = "";
+<div style="margin-top:12px">
+<button onclick="approveSelected()">✅ Add selected</button>
+<button onclick="approveAll()">🚀 Add all</button>
+<span id="count" class="small"></span>
+</div>
 
-        const filtered = _actionsCache
-          .map((a, i) => ({ a, i }))
-          .filter(({ a }) => !q || String(a.action || "").toLowerCase().includes(q));
+<div id="actions"></div>
 
-        filtered.forEach(({ a, i }) => {
-          const conf = a.confidence ?? 0.5;
-          const suggestedDeadline = _isoOrBlank(a.deadline);
-          const needsReview = conf < 0.7;
+</div>
 
-          const deadlineVal = suggestedDeadline;
+<script>
 
-          const keyNow = `${(deadlineVal || suggestedDeadline || "")}|${String(a.action || "").trim()}`;
-          const alreadyApproved = keyNow.includes("|") && _approvedKeys.has(keyNow);
+const API = window.location.origin.includes("127")
+  ? "http://127.0.0.1:8000"
+  : window.location.origin;
 
-          container.innerHTML += `
-            <div id="actCard${i}" style="
-              border:1px solid #ddd;
-              padding:10px;
-              margin:8px 0;
-              background:${needsReview ? "#fafafa" : "white"};
-              opacity:${alreadyApproved ? "0.6" : needsReview ? "0.95" : "1"};
-            ">
-              <label>
-                <input type="checkbox" id="actPick${i}" value="${i}"
-                  ${(!alreadyApproved && !needsReview) ? "checked" : ""}
-                  ${alreadyApproved ? "disabled" : ""}
-                  onchange="updateCount()"
-                />
-                <b>${a.action ?? "(no action)"}</b>
-                <span id="actStatus${i}" style="margin-left:6px; font-size:12px;">
-                  ${alreadyApproved ? "🟡 Duplicate" : ""}
-                </span>
-                <span style="margin-left:8px; font-size:12px; opacity:0.7;">
-                  Confidence: <b>${Math.round(conf * 100)}%</b>
-                </span>
-              </label>
+let actionsCache=[]
+let approvedKeys=new Set()
 
-              <div style="margin-top:6px;">
-                Deadline:
-                <input type="date" id="actDate${i}" value="${deadlineVal}" ${alreadyApproved ? "disabled" : ""} />
-                ${needsReview && suggestedDeadline
-                    ? `<button type="button" style="margin-left:8px; font-size:12px; padding:3px 8px;" onclick="applySuggested(${i}, '${suggestedDeadline}')">Confirm (${suggestedDeadline})</button>
-                       <span style="margin-left:6px; font-size:12px; color:#b26a00;">Review date</span>`
-                    : ""}
-                ${!suggestedDeadline
-                    ? `<span style="margin-left:6px; font-size:12px; color:#b00020;">No deadline detected — please set one</span>`
-                    : ""}
-              </div>
+function busy(state,msg){
 
-              <div style="margin-top:6px; font-size:12px; opacity:0.8;">Owner: <b>${a.owner ?? "—"}</b></div>
-              <div style="margin-top:6px; font-size:12px; opacity:0.8;">Source: ${a.source_sentence ?? "—"}</div>
-            </div>
-          `;
-        });
+["loadBtn","selAllBtn","selNoneBtn"].forEach(id=>{
+let el=document.getElementById(id)
+if(el)el.disabled=state
+})
 
-        updateCount();
-      }
+if(msg)document.getElementById("debug").innerText=msg
+}
 
-      async function loadLatest() {
-        setBusy(true, `Loading ${API}/latest ...`);
-        try {
-          const res = await fetch(`${API}/latest`);
-          const txt = await res.text();
-          let data;
-          try { data = JSON.parse(txt); } catch { data = { raw: txt }; }
+function selectedIndices(){
 
-          document.getElementById("out").innerText = JSON.stringify(data, null, 2);
+return Array.from(document.querySelectorAll('[id^="actPick"]'))
+.filter(x=>x.checked)
+.map(x=>parseInt(x.value))
+}
 
-          if (!res.ok || data.status !== "ok") {
-            document.getElementById("card").style.display = "none";
-            setBusy(false);
-            return alert("Upload a meeting first (or backend error).");
-          }
+function selectAll(v){
 
-          const actions = data.data?.actions || [];
-          _actionsCache = Array.isArray(actions) ? actions : [];
+document.querySelectorAll('[id^="actPick"]').forEach(x=>{
+x.checked=v
+})
 
-          const approved = data.data?.approved_keys || [];
-          _approvedKeys = new Set(Array.isArray(approved) ? approved : []);
+updateCount()
+}
 
-          if (!_actionsCache.length) {
-            document.getElementById("card").style.display = "none";
-            setBusy(false);
-            return alert("No actions found in latest upload.");
-          }
+function updateCount(){
 
-          document.getElementById("card").style.display = "block";
-          document.getElementById("selAllBtn").disabled = false;
-          document.getElementById("selNoneBtn").disabled = false;
+let total=actionsCache.length
+let sel=selectedIndices().length
 
-          renderFiltered();
-          setBusy(false);
-        } catch (err) {
-          document.getElementById("out").innerText = String(err);
-          document.getElementById("card").style.display = "none";
-          setBusy(false);
-          alert(`⚠️ Could not reach backend at ${API}. Is uvicorn running?`);
-        }
-      }
+document.getElementById("count").innerText=`${sel}/${total} selected`
+}
 
-      async function approveSelected() {
-        const indices = _selectedIndices();
-        if (!indices.length) return alert("Select at least one action first.");
+function dedupeKey(index){
 
-        const missing = indices.filter((idx) => !(document.getElementById(`actDate${idx}`)?.value));
-        if (missing.length) return alert(`Please set a deadline for: ${missing.join(", ")}`);
+let a=actionsCache[index]
+let title=(a.action||"").trim()
 
-        setBusy(true, "Creating Google Calendar events...");
+let d=document.getElementById(`actDate${index}`)?.value||a.deadline||""
 
-        const deadlines = {};
-        indices.forEach((idx) => {
-          const v = document.getElementById(`actDate${idx}`)?.value || "";
-          if (v) deadlines[String(idx)] = v;
-        });
+return `${d}|${title}`
+}
 
-        const res = await fetch(`${API}/approve_bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ indices, deadlines }),
-        });
+function markStatus(index,type,msg){
 
-        const txt = await res.text();
-        let data;
-        try { data = JSON.parse(txt); } catch { data = { raw: txt }; }
+let badge=document.getElementById(`status${index}`)
+if(!badge)return
 
-        document.getElementById("out").innerText = JSON.stringify(data, null, 2);
+if(type==="created"){
+badge.innerText="✅ Created"
+badge.style.color="green"
+}
 
-        if (!res.ok) {
-          setBusy(false);
-          return alert("⚠️ Bulk approve failed. If it says Google not connected, click 'Connect Google Calendar' above.");
-        }
+if(type==="duplicate"){
+badge.innerText="🟡 Duplicate"
+badge.style.color="orange"
+}
 
-        if (data.status === "bulk_done") {
-          (data.created || []).forEach((c) => {
-            const key = _dedupeKey(c.index);
-            _approvedKeys.add(key);
-            markStatus(c.index, "created");
-          });
+if(type==="failed"){
+badge.innerText="❌ Failed "+msg
+badge.style.color="red"
+}
 
-          (data.failed || []).forEach((f) => {
-            const e = (f.error || "").toLowerCase();
-            if (e.includes("duplicate")) markStatus(f.index, "duplicate");
-            else markStatus(f.index, "failed", f.error);
-          });
-        }
+updateCount()
+}
 
-        alert(`✅ Created ${data.created?.length || 0} event(s).\n⚠️ Failed: ${data.failed?.length || 0}`);
-        setBusy(false);
-      }
+function renderFiltered(){
 
-      async function approveAll() {
-        selectAll(true);
-        return approveSelected();
-      }
-    </script>
-  </body>
+let q=document.getElementById("filter").value.toLowerCase()
+
+let container=document.getElementById("actions")
+container.innerHTML=""
+
+actionsCache.forEach((a,i)=>{
+
+if(q && !a.action.toLowerCase().includes(q))return
+
+let conf=a.confidence||0.5
+let needsReview=conf<0.7
+
+let deadline=a.deadline||""
+
+let approved=approvedKeys.has(`${deadline}|${a.action.trim()}`)
+
+container.innerHTML+=`
+
+<div class="card ${needsReview?"review":""}" id="card${i}">
+
+<label>
+<input type="checkbox" id="actPick${i}" value="${i}" ${approved?"disabled":""} onchange="updateCount()">
+<b>${a.action}</b>
+
+<span id="status${i}" class="badge">
+${approved?"🟡 Duplicate":""}
+</span>
+
+<span class="small">Confidence ${Math.round(conf*100)}%</span>
+</label>
+
+<div style="margin-top:6px">
+
+Deadline:
+<input type="date" id="actDate${i}" value="${deadline}" ${approved?"disabled":""}>
+
+</div>
+
+<div class="small">Owner: ${a.owner||"—"}</div>
+<div class="small">Source: ${a.source_sentence||"—"}</div>
+
+</div>
+`
+})
+
+updateCount()
+}
+
+async function loadLatest(){
+
+busy(true,"Loading latest actions...")
+
+let res=await fetch(`${API}/latest`)
+let data=await res.json()
+
+document.getElementById("debug").innerText=JSON.stringify(data,null,2)
+
+if(data.status!=="ok"){
+busy(false)
+alert("No meeting uploaded yet")
+return
+}
+
+actionsCache=data.data.actions||[]
+approvedKeys=new Set(data.data.approved_keys||[])
+
+if(!actionsCache.length){
+alert("No actions detected")
+busy(false)
+return
+}
+
+document.getElementById("actionsPanel").style.display="block"
+
+document.getElementById("selAllBtn").disabled=false
+document.getElementById("selNoneBtn").disabled=false
+
+renderFiltered()
+
+busy(false)
+}
+
+async function approveSelected(){
+
+let indices=selectedIndices()
+
+if(!indices.length){
+alert("Select at least one action")
+return
+}
+
+let deadlines={}
+
+indices.forEach(i=>{
+let d=document.getElementById(`actDate${i}`).value
+if(d)deadlines[String(i)]=d
+})
+
+busy(true,"Creating events...")
+
+let res=await fetch(`${API}/approve_bulk`,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({indices,deadlines})
+})
+
+let data=await res.json()
+
+document.getElementById("debug").innerText=JSON.stringify(data,null,2)
+
+if(data.status==="bulk_done"){
+
+data.created.forEach(x=>{
+approvedKeys.add(dedupeKey(x.index))
+markStatus(x.index,"created")
+})
+
+data.failed.forEach(x=>{
+if(x.error.includes("Duplicate"))
+markStatus(x.index,"duplicate")
+else
+markStatus(x.index,"failed",x.error)
+})
+
+}
+
+busy(false)
+
+alert(`Created ${data.created.length} events`)
+}
+
+function approveAll(){
+
+selectAll(true)
+approveSelected()
+
+}
+
+</script>
+
+</body>
 </html>

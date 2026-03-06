@@ -3,105 +3,169 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FollowThrough Desktop</title>
+  <title>FollowThrough • Command Center</title>
+
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
   <style>
     :root{
-      --bg:#f6f7fb;
-      --card:#ffffff;
-      --text:#101828;
-      --muted:#667085;
-      --border:#e6e8ee;
-      --shadow:0 10px 30px rgba(16,24,40,.08);
-      --shadow2:0 2px 10px rgba(16,24,40,.06);
-
-      --brand:#4f46e5;
-      --brand2:#4338ca;
-
-      --ok-bg:#ecfdf3;
-      --ok-tx:#027a48;
-
-      --warn-bg:#fffaeb;
-      --warn-tx:#b54708;
-
-      --low-bg:#f2f4f7;
-      --low-tx:#344054;
-
-      --dup-bg:#fef3f2;
-      --dup-tx:#b42318;
-
-      --chip:#f2f4f7;
-      --chip-border:#eaecf0;
-
-      --btn:#ffffff;
-      --btn-border:#d0d5dd;
-
-      --danger-bg:#fff1f3;
-      --danger-border:#fecdd3;
-      --danger-tx:#9f1239;
-
-      --success-bg:#ecfdf3;
-      --success-border:#abefc6;
-      --success-tx:#027a48;
-
-      --focus:0 0 0 4px rgba(79,70,229,.18);
+      --bg0:#070A12;
+      --bg1:#0A1022;
+      --card:#0E1731;
+      --card2:#0C142B;
+      --border:rgba(255,255,255,.10);
+      --border2:rgba(255,255,255,.08);
+      --text:#EAF0FF;
+      --muted:rgba(234,240,255,.65);
+      --muted2:rgba(234,240,255,.45);
+      --accent:#7C5CFF;
+      --accent2:#57D6FF;
+      --good:#2FE07D;
+      --warn:#FFCC4A;
+      --bad:#FF4D5A;
+      --shadow: 0 14px 40px rgba(0,0,0,.45);
+      --shadow2: 0 10px 28px rgba(0,0,0,.35);
       --radius:16px;
+      --radius2:12px;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,"Courier New",monospace;
+      --sans: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:radial-gradient(1200px 400px at 10% -10%, rgba(79,70,229,.14), transparent 60%),
-                 radial-gradient(1000px 380px at 80% 0%, rgba(16,185,129,.10), transparent 55%),
-                 var(--bg);
+      font-family:var(--sans);
       color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 25% -10%, rgba(124,92,255,.22), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(87,214,255,.16), transparent 55%),
+        radial-gradient(900px 700px at 40% 110%, rgba(47,224,125,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow:hidden;
     }
 
-    .wrap{
-      max-width:1100px;
-      margin:24px auto;
-      padding:0 18px 40px;
+    /* Layout */
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:0;
     }
 
-    .topbar{
+    /* Sidebar */
+    .sidebar{
+      border-right:1px solid var(--border2);
+      background:
+        linear-gradient(180deg, rgba(14,23,49,.65), rgba(10,16,34,.55));
+      padding:16px 14px;
       display:flex;
-      align-items:flex-start;
-      gap:16px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
+      flex-direction:column;
+      gap:14px;
     }
 
     .brand{
       display:flex;
       align-items:center;
       gap:12px;
-      margin-right:auto;
-    }
-    .logo{
-      width:38px;height:38px;border-radius:12px;
-      background:linear-gradient(135deg, var(--brand), #22c55e);
+      padding:12px 12px;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:rgba(14,23,49,.45);
       box-shadow: var(--shadow2);
     }
-    h1{
-      margin:0;
-      font-size:28px;
-      letter-spacing:-.3px;
-      line-height:1.1;
+    .logo{
+      width:42px;height:42px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(124,92,255,1), rgba(87,214,255,1));
+      position:relative;
+      box-shadow:0 10px 26px rgba(124,92,255,.25);
     }
-    .sub{
-      margin-top:2px;
+    .logo:after{
+      content:"";
+      position:absolute; inset:10px;
+      border-radius:10px;
+      background:rgba(7,10,18,.35);
+      border:1px solid rgba(255,255,255,.15);
+      backdrop-filter: blur(10px);
+    }
+    .brand h1{
+      margin:0;
+      font-size:16px;
+      letter-spacing:-.2px;
+      line-height:1.1;
+      font-weight:900;
+    }
+    .brand .sub{
       color:var(--muted);
-      font-size:13px;
-      font-weight:650;
+      font-weight:800;
+      font-size:12px;
+      margin-top:2px;
     }
 
-    .statusRow{
+    .nav{
       display:flex;
-      gap:10px;
+      flex-direction:column;
+      gap:6px;
+    }
+    .nav button{
+      appearance:none;
+      width:100%;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted);
+      padding:10px 10px;
+      border-radius:12px;
+      text-align:left;
+      font-weight:900;
+      cursor:pointer;
+      display:flex;
       align-items:center;
+      gap:10px;
+      transition: .15s ease;
+    }
+    .nav button:hover{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+    }
+    .nav button.active{
+      background:linear-gradient(135deg, rgba(124,92,255,.22), rgba(87,214,255,.12));
+      border-color:rgba(124,92,255,.35);
+      color:var(--text);
+      box-shadow:0 10px 24px rgba(124,92,255,.10);
+    }
+    .nav .ico{
+      width:28px; height:28px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--text);
+      font-size:14px;
+    }
+
+    .sidebarFooter{
+      margin-top:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .statusCard{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:rgba(14,23,49,.40);
+      box-shadow:var(--shadow2);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .pillRow{
+      display:flex;
       flex-wrap:wrap;
-      margin-top:4px;
+      gap:8px;
+      align-items:center;
     }
     .pill{
       display:inline-flex;
@@ -109,1002 +173,1172 @@
       gap:8px;
       padding:7px 10px;
       border-radius:999px;
-      background:var(--chip);
-      border:1px solid var(--chip-border);
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      font-weight:900;
       font-size:12px;
-      font-weight:800;
-      color:#344054;
-      white-space:nowrap;
+      color:var(--text);
+      user-select:none;
     }
-    .dot{width:8px;height:8px;border-radius:999px;background:#98a2b3}
-    .pill.ok{background:var(--ok-bg); border-color:#d1fadf; color:var(--ok-tx)}
-    .pill.ok .dot{background:#12b76a}
-    .pill.warn{background:var(--warn-bg); border-color:#fedf89; color:var(--warn-tx)}
-    .pill.warn .dot{background:#f79009}
-    .pill.bad{background:var(--dup-bg); border-color:#fecdca; color:var(--dup-tx)}
-    .pill.bad .dot{background:#f04438}
+    .dot{ width:8px; height:8px; border-radius:50%; background:#666; }
+    .dot.good{ background:var(--good); }
+    .dot.warn{ background:var(--warn); }
+    .dot.bad{ background:var(--bad); }
 
+    /* Main */
+    .main{
+      height:100%;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      padding:14px 18px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      border-bottom:1px solid var(--border2);
+      background: linear-gradient(180deg, rgba(14,23,49,.55), rgba(10,16,34,.38));
+    }
+
+    .topbar .search{
+      flex:1;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      padding:8px 10px;
+    }
+    .topbar input[type="text"]{
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-weight:800;
+      font-size:13px;
+    }
+    .topbar input::placeholder{ color:rgba(234,240,255,.45); }
+
+    .btn{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:12px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:.15s ease;
+      user-select:none;
+    }
+    .btn:hover{ background:rgba(255,255,255,.10); }
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(124,92,255,.95), rgba(87,214,255,.55));
+      border-color:rgba(124,92,255,.35);
+    }
+    .btn.primary:hover{ filter:brightness(1.05); }
+    .btn.ghost{
+      background:transparent;
+      border-color:rgba(255,255,255,.12);
+    }
+    .btn.danger{
+      background:rgba(255,77,90,.12);
+      border-color:rgba(255,77,90,.26);
+      color:#FFD7DA;
+    }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .content{
+      padding:18px;
+      overflow:auto;
+      height:100%;
+    }
+
+    .notice{
+      margin-bottom:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      border-radius:14px;
+      padding:10px 12px;
+      color:var(--muted);
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .notice strong{ color:var(--text); }
+    .notice .spark{
+      width:22px;height:22px;border-radius:10px;
+      display:grid;place-items:center;
+      background:rgba(124,92,255,.20);
+      border:1px solid rgba(124,92,255,.30);
+    }
+
+    /* Cards / grids */
     .grid{
       display:grid;
-      grid-template-columns: 1.15fr .85fr;
+      grid-template-columns: repeat(12, 1fr);
       gap:14px;
-      align-items:start;
     }
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-    }
-
     .card{
-      background:var(--card);
+      grid-column: span 12;
       border:1px solid var(--border);
       border-radius:var(--radius);
+      background:rgba(14,23,49,.46);
       box-shadow:var(--shadow2);
+      padding:14px;
       overflow:hidden;
     }
     .cardHeader{
-      padding:14px 14px 10px;
-      border-bottom:1px solid var(--border);
       display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
     }
-    .cardHeader h2{
+    .cardTitle{
       margin:0;
-      font-size:14px;
-      letter-spacing:-.2px;
+      font-size:13px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.72);
+      font-weight:1000;
+    }
+    .cardBig{
+      font-size:26px;
+      font-weight:1100;
+      letter-spacing:-.6px;
+      margin-top:6px;
+    }
+    .cardSub{
+      color:var(--muted);
+      font-weight:800;
+      font-size:12px;
+      margin-top:2px;
     }
     .cardBody{
-      padding:14px;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .spacer{flex:1}
-
-    button{
-      appearance:none;
-      border:1px solid var(--btn-border);
-      background:var(--btn);
-      color:#101828;
-      border-radius:12px;
-      padding:9px 11px;
-      font-weight:800;
-      font-size:13px;
-      cursor:pointer;
-      box-shadow:0 1px 0 rgba(16,24,40,.04);
-      transition: transform .02s ease, box-shadow .2s ease, border-color .2s ease;
-    }
-    button:hover{box-shadow:var(--shadow2)}
-    button:active{transform: translateY(1px)}
-    button:disabled{opacity:.5; cursor:not-allowed; box-shadow:none}
-
-    button.primary{
-      border-color:rgba(79,70,229,.22);
-      background:linear-gradient(180deg, rgba(79,70,229,.12), rgba(79,70,229,.06));
-      color:var(--brand2);
-    }
-    button.danger{
-      background:var(--danger-bg);
-      border-color:var(--danger-border);
-      color:var(--danger-tx);
-    }
-    button.success{
-      background:var(--success-bg);
-      border-color:var(--success-border);
-      color:var(--success-tx);
-    }
-
-    input[type="text"], input[type="date"]{
-      border:1px solid var(--btn-border);
-      border-radius:12px;
-      padding:9px 10px;
-      font-size:13px;
-      font-weight:750;
-      outline:none;
-      background:#fff;
-    }
-    input[type="text"]:focus, input[type="date"]:focus{
-      box-shadow:var(--focus);
-      border-color:rgba(79,70,229,.35);
-    }
-    .small{
-      font-size:12px;
+      margin-top:8px;
       color:var(--muted);
-      font-weight:750;
-    }
-
-    .toggle{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:8px 10px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:#fff;
       font-weight:800;
       font-size:13px;
-      color:#344054;
-    }
-    .toggle input{transform:scale(1.15)}
-
-    .uploadBox{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      padding:12px;
-      border-radius:14px;
-      border:1px dashed #cfd4dc;
-      background:linear-gradient(180deg, rgba(16,185,129,.06), rgba(79,70,229,.04));
-    }
-    .uploadBox strong{font-size:13px}
-    .fileName{
-      color:#344054;
-      font-weight:850;
-      font-size:12px;
-      background:#fff;
-      border:1px solid var(--border);
-      padding:6px 10px;
-      border-radius:999px;
-      max-width:340px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-
-    .msg{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-      color:#344054;
-      font-weight:750;
-      font-size:13px;
-    }
-    .msg.ok{background:var(--ok-bg); border-color:#d1fadf; color:var(--ok-tx)}
-    .msg.warn{background:var(--warn-bg); border-color:#fedf89; color:var(--warn-tx)}
-    .msg.bad{background:var(--dup-bg); border-color:#fecdca; color:var(--dup-tx)}
-
-    details summary{
-      cursor:pointer;
-      font-weight:900;
-      color:#475467;
-      user-select:none;
-      margin-top:10px;
-    }
-    pre{
-      margin:10px 0 0;
-      padding:12px;
-      border-radius:14px;
-      background:#0b1220;
-      color:#e5e7eb;
-      border:1px solid rgba(255,255,255,.08);
-      overflow:auto;
-      font-size:12px;
       line-height:1.35;
     }
 
-    .actionsTop{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
+    .kpi{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .kpiRow{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:1000;
+      font-size:12px;
     }
 
-    .counts{
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{ display:none; }
+      .split{ grid-template-columns: 1fr; }
+    }
+
+    /* Lists */
+    .list{
       display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+      flex-direction:column;
+      gap:10px;
       margin-top:10px;
     }
-    .chip{
-      border-radius:999px;
-      padding:6px 10px;
-      background:var(--chip);
-      border:1px solid var(--chip-border);
-      font-size:12px;
-      font-weight:900;
-      color:#344054;
-      white-space:nowrap;
-    }
-
-    .list{
-      margin-top:12px;
-      display:grid;
-      gap:10px;
-    }
     .item{
-      border:1px solid var(--border);
+      border:1px solid rgba(255,255,255,.10);
       border-radius:14px;
+      background:rgba(255,255,255,.05);
       padding:12px;
-      background:#fff;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
-    .item.auto{background:var(--ok-bg)}
-    .item.review{background:var(--warn-bg)}
-    .item.low{background:var(--low-bg)}
-    .item.dup{background:var(--dup-bg)}
-
     .itemTop{
       display:flex;
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
     }
-    .title{
-      font-weight:950;
-      letter-spacing:-.15px;
+    .itemTitle{
+      font-weight:1100;
+      color:var(--text);
+      letter-spacing:-.2px;
     }
-    .mini{
+    .itemMeta{
+      color:var(--muted);
       font-weight:900;
       font-size:12px;
-      color:#344054;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(16,24,40,.08);
-      background:rgba(255,255,255,.55);
     }
-    .mini.bad{color:var(--dup-tx); border-color:rgba(180,35,24,.25)}
-    .mini.ok{color:var(--ok-tx); border-color:rgba(2,122,72,.25)}
-    .mini.warn{color:var(--warn-tx); border-color:rgba(181,71,8,.25)}
-
-    .itemMid{
+    .row{
       display:flex;
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
-      margin-top:8px;
     }
 
-    .ownerPill{
-      margin-left:auto;
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-
-    .src{
-      margin-top:8px;
-      font-size:12px;
-      color:#344054;
-      opacity:.9;
-      line-height:1.35;
-    }
-    .src b{color:#101828}
-
-    a{
-      color:var(--brand2);
+    input[type="date"], input[type="file"], select{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:9px 10px;
+      border-radius:12px;
       font-weight:900;
-      text-decoration:underline;
+      outline:none;
+    }
+    input[type="file"]{ padding:7px 10px; }
+    .smallNote{ color:var(--muted2); font-weight:800; font-size:12px; }
+
+    .mono{
+      font-family:var(--mono);
+      font-size:12px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      padding:12px;
+      border-radius:14px;
+      color:rgba(234,240,255,.85);
+      overflow:auto;
+      max-height:320px;
+    }
+
+    /* Simple "toast" */
+    .toast{
+      position:fixed;
+      left:18px;
+      bottom:18px;
+      max-width:520px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(14,23,49,.70);
+      backdrop-filter: blur(14px);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow:var(--shadow);
+      color:var(--muted);
+      font-weight:900;
+      display:none;
+      gap:10px;
+      align-items:flex-start;
+      z-index:9999;
+    }
+    .toast.show{ display:flex; }
+    .toast .tDot{ width:10px; height:10px; border-radius:50%; background:var(--accent2); margin-top:4px; }
+    .toast .tTitle{ color:var(--text); font-weight:1100; }
+    .toast .tMsg{ margin-top:3px; color:var(--muted); font-weight:800; }
+
+    a{ color:#B9ABFF; font-weight:1000; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .hr{
+      height:1px;
+      background:rgba(255,255,255,.10);
+      margin:10px 0;
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>FollowThrough</h1>
+        <div class="sub">Desktop Command Center</div>
+      </div>
+    </div>
+
+    <div class="nav" id="nav">
+      <button class="active" data-view="dashboard"><span class="ico">📊</span>Dashboard</button>
+      <button data-view="upload"><span class="ico">🎙️</span>Upload Meeting</button>
+      <button data-view="tasks"><span class="ico">✅</span>Tasks</button>
+      <button data-view="insights"><span class="ico">🧠</span>Insights</button>
+      <button data-view="predictions"><span class="ico">🔮</span>Predictions</button>
+      <button data-view="copilot"><span class="ico">🤖</span>AI Copilot</button>
+      <button data-view="brain"><span class="ico">🧠</span>Company Brain</button>
+      <button data-view="debug"><span class="ico">🛠️</span>Debug</button>
+    </div>
+
+    <div class="sidebarFooter">
+      <div class="statusCard">
+        <div class="pillRow">
+          <span class="pill"><span class="dot good" id="apiDot"></span>API: <span id="apiText">127.0.0.1:8000</span></span>
+          <span class="pill"><span class="dot bad" id="gDot"></span>Google: <span id="gText">unknown</span></span>
+        </div>
+
+        <div class="row" style="margin-top:6px">
+          <button class="btn primary" id="btnConnectGoogle">Connect Google</button>
+          <button class="btn" id="btnRefreshAll">Refresh</button>
+        </div>
+
+        <div class="smallNote" id="statusLine">Ready.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOPBAR -->
     <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+      <div class="search" title="Workspace + API base">
+        <span style="opacity:.8;font-weight:1000;">WS</span>
+        <input id="workspace" type="text" placeholder="default" value="default" />
+        <span style="opacity:.55;">•</span>
+        <input id="apiBase" type="text" placeholder="http://127.0.0.1:8000" value="http://127.0.0.1:8000" />
+        <button class="btn" id="btnSet">Set</button>
+      </div>
+
+      <button class="btn ghost" id="btnOpenDocs">Open API docs</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="notice" id="notice">
+        <div class="spark">✨</div>
         <div>
-          <h1>FollowThrough Desktop</h1>
-          <div class="sub">Approvals that don’t waste your brain.</div>
-          <div class="statusRow">
-            <span id="pillBackend" class="pill"><span class="dot"></span>Backend: checking…</span>
-            <span id="pillGoogle" class="pill"><span class="dot"></span>Google: unknown</span>
-            <span id="pillApi" class="pill">API: <span id="apiText">127.0.0.1:8000</span></span>
-          </div>
+          <strong>Command Center</strong> — clean UI, real API calls, and clear errors (no silent failures).
+          <div class="smallNote">Tip: keep backend running on <span class="mono" style="padding:2px 6px;border-radius:8px;">127.0.0.1:8000</span>.</div>
         </div>
       </div>
 
-      <div class="row">
-        <input id="workspace" type="text" placeholder="workspace (optional)" />
-        <button id="btnLoad" class="primary">Load latest</button>
-        <button id="btnReextract">Re-extract</button>
-        <button id="btnReset" class="danger">Reset approvals</button>
-        <button id="btnConnectGoogle">Connect Google</button>
-        <button id="btnSelectHigh">Select high</button>
-        <button id="btnSelectAll">Select all</button>
-        <button id="btnSelectNone">None</button>
-      </div>
-    </div>
+      <!-- DASHBOARD -->
+      <section id="view-dashboard">
+        <div class="grid">
 
-    <div class="grid">
-      <!-- Left: Actions -->
-      <div class="card">
-        <div class="cardHeader">
-          <h2>Actions</h2>
-          <span class="spacer"></span>
-          <div class="actionsTop">
-            <input id="filter" type="text" placeholder="Filter actions…" />
-            <label class="toggle"><input id="includeLow" type="checkbox">Include low (&lt;60%)</label>
-            <label class="toggle"><input id="autoApproveOnLoad" type="checkbox">Auto-approve ≥80% on load</label>
-            <button id="btnAutofill">Auto-fill missing deadlines (tomorrow)</button>
+          <div class="card" style="grid-column: span 4;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Latest actions</div>
+                <div class="cardBig" id="kpiActions">—</div>
+                <div class="cardSub">From /latest</div>
+              </div>
+              <span class="tag"><span class="dot" id="latestDot"></span><span id="latestTag">idle</span></span>
+            </div>
+            <div class="cardBody" id="kpiActionsText">Load latest meeting actions.</div>
           </div>
-        </div>
 
-        <div class="cardBody">
-          <div class="row">
-            <button id="btnAddSelected" class="success" disabled>✅ Add selected</button>
-            <button id="btnAddAuto" class="primary" disabled>🚀 Add all (auto)</button>
-            <span id="selectedCount" class="small">0 selected</span>
-            <span class="spacer"></span>
-            <div class="counts">
-              <span id="chipAuto" class="chip">Auto: 0 (≥80%)</span>
-              <span id="chipReview" class="chip">Needs review: 0 (60–79%)</span>
-              <span id="chipLow" class="chip">Low: 0 (&lt;60%)</span>
-              <span id="chipDup" class="chip">Duplicates: 0</span>
-              <span id="chipTh" class="chip">Threshold: 80%</span>
+          <div class="card" style="grid-column: span 4;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Task status</div>
+                <div class="cardBig" id="kpiStatus">—</div>
+                <div class="cardSub">From /task_status</div>
+              </div>
+              <span class="tag"><span class="dot" id="statusDot"></span><span id="statusTag">idle</span></span>
+            </div>
+            <div class="cardBody" id="kpiStatusText">Shows live status items.</div>
+          </div>
+
+          <div class="card" style="grid-column: span 4;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Risk alerts</div>
+                <div class="cardBig" id="kpiRisks">—</div>
+                <div class="cardSub">From /task_risks</div>
+              </div>
+              <span class="tag"><span class="dot" id="riskDot"></span><span id="riskTag">idle</span></span>
+            </div>
+            <div class="cardBody" id="kpiRisksText">Red flags, blockers, delays.</div>
+          </div>
+
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Executive dashboard</div>
+                <div class="cardSub">From /dashboard</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnLoadLatest">Load latest</button>
+                <button class="btn" id="btnRunDashboard">Refresh dashboard</button>
+              </div>
+            </div>
+            <div class="split">
+              <div>
+                <div class="kpi">
+                  <div class="kpiRow">
+                    <span class="tag">Summary</span>
+                    <span class="itemMeta" id="dashMeta">—</span>
+                  </div>
+                  <div class="cardBody" id="dashSummary">No data yet.</div>
+                </div>
+                <div class="hr"></div>
+                <div class="kpi">
+                  <div class="kpiRow"><span class="tag">Key points</span></div>
+                  <div class="list" id="dashPoints"></div>
+                </div>
+              </div>
+              <div>
+                <div class="kpi">
+                  <div class="kpiRow"><span class="tag">Risks</span></div>
+                  <div class="list" id="dashRisks"></div>
+                </div>
+                <div class="hr"></div>
+                <div class="kpi">
+                  <div class="kpiRow"><span class="tag">Decisions</span></div>
+                  <div class="list" id="dashDecisions"></div>
+                </div>
+              </div>
+            </div>
+            <div class="smallNote" style="margin-top:10px;">
+              If a panel is empty, it means the backend returned nothing (not a UI bug).
             </div>
           </div>
 
-          <div id="message" class="msg" style="margin-top:12px;">Ready.</div>
-
-          <div id="list" class="list"></div>
-
-          <details>
-            <summary>Raw API output (debug)</summary>
-            <pre id="raw">(empty)</pre>
-          </details>
         </div>
-      </div>
+      </section>
 
-      <!-- Right: Upload -->
-      <div class="card">
-        <div class="cardHeader">
-          <h2>Upload audio</h2>
-          <span class="spacer"></span>
-          <span class="small">.m4a / .wav / .mp3</span>
-        </div>
-
-        <div class="cardBody">
-          <div class="uploadBox">
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <strong>Drop-in upload from the desktop app</strong>
-              <span class="small">This calls <code>/upload</code> (multipart) and refreshes actions automatically.</span>
+      <!-- UPLOAD -->
+      <section id="view-upload" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Upload a meeting</div>
+                <div class="cardSub">Sends audio to /upload_audio and then loads /latest.</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnUpload">Upload</button>
+                <button class="btn" id="btnRefreshLatest2">Refresh latest</button>
+              </div>
             </div>
-            <span class="spacer"></span>
-            <span id="fileName" class="fileName">No file selected</span>
-            <input id="file" type="file" accept="audio/*,.m4a,.wav,.mp3" />
-            <button id="btnUpload" class="primary" disabled>Upload</button>
-          </div>
 
-          <div style="margin-top:12px" class="small">
-            Tip: If Connect Google opens “as a file”, you’re opening the URL inside the webview.
-            This UI uses Tauri’s <code>shell.open</code> when available so it opens in your default browser.
+            <div class="row">
+              <input id="file" type="file" accept="audio/*" />
+              <span class="smallNote">Supported: any audio your backend transcriber accepts.</span>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="split">
+              <div>
+                <div class="cardTitle" style="margin-bottom:8px;">Last upload summary</div>
+                <div class="cardBody" id="uploadSummary">—</div>
+              </div>
+              <div>
+                <div class="cardTitle" style="margin-bottom:8px;">Detected actions</div>
+                <div class="list" id="uploadActions"></div>
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- COMPANY BRAIN -->
+      <section id="view-brain" style="display:none;">
+        <div class="grid">
+
+          <div class="card" style="grid-column: span 12;">
+
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Company Brain</div>
+                <div class="cardSub">Knowledge graph built from meetings</div>
+              </div>
+
+              <div class="row">
+                <button class="btn" id="btnLoadBrain">Load brain</button>
+              </div>
+            </div>
+
+            <div class="split">
+              <div>
+                <div class="cardTitle">People</div>
+                <div class="list" id="brainPeople"></div>
+
+                <div class="hr"></div>
+
+                <div class="cardTitle">Decisions</div>
+                <div class="list" id="brainDecisions"></div>
+              </div>
+
+              <div>
+                <div class="cardTitle">Tasks</div>
+                <div class="list" id="brainTasks"></div>
+
+                <div class="hr"></div>
+
+                <div class="cardTitle">Topics</div>
+                <div class="list" id="brainTopics"></div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="cardTitle">Knowledge Graph</div>
+            <div id="brainGraph"
+            
+              style="
+                height:500px;
+                border:1px solid rgba(255,255,255,.1);
+                border-radius:14px;
+                background:rgba(0,0,0,.25);
+                margin-top:10px;
+              "></div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TASKS -->
+      <section id="view-tasks" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Tasks</div>
+                <div class="cardSub">Approve actions → create calendar events (bulk).</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnReextract">Re-extract</button>
+                <button class="btn danger" id="btnResetApprovals">Reset approvals</button>
+                <button class="btn primary" id="btnApproveSelected" disabled>✅ Approve selected</button>
+              </div>
+            </div>
+
+            <div class="row">
+              <input id="taskFilter" type="text" placeholder="Filter tasks..." />
+              <button class="btn" id="btnSelectAll">Select all</button>
+              <button class="btn" id="btnSelectNone">Select none</button>
+              <button class="btn" id="btnSelectHigh">Select high (≥80%)</button>
+              <span class="smallNote" id="taskCount">—</span>
+            </div>
+
+            <div class="list" id="taskList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSIGHTS -->
+      <section id="view-insights" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Insights</div>
+                <div class="cardSub">From /insights</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnLoadInsights">Refresh insights</button>
+              </div>
+            </div>
+            <div class="list" id="insightList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PREDICTIONS -->
+      <section id="view-predictions" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Predictions</div>
+                <div class="cardSub">From /predictions</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnLoadPredictions">Refresh predictions</button>
+              </div>
+            </div>
+            <div class="list" id="predictionList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COPILOT -->
+      <section id="view-copilot" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">AI Copilot</div>
+                <div class="cardSub">Asks your meeting memory. Tries /copilot first, then falls back to /ask.</div>
+              </div>
+              <div class="row">
+                <button class="btn primary" id="btnAsk">Ask</button>
+              </div>
+            </div>
+
+            <div class="row">
+              <input id="copilotQ" type="text" placeholder="Ask: what did we decide? who owns what? what's blocked?" />
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="cardTitle" style="margin-bottom:8px;">Answer</div>
+            <div class="mono" id="copilotA">(empty)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEBUG -->
+      <section id="view-debug" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="cardHeader">
+              <div>
+                <div class="cardTitle">Debug</div>
+                <div class="cardSub">Raw API responses (useful when something breaks).</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnDumpLatest">Dump /latest</button>
+                <button class="btn" id="btnDumpDashboard">Dump /dashboard</button>
+                <button class="btn" id="btnDumpAll">Dump All</button>
+              </div>
+            </div>
+            <div class="mono" id="debugOut">(empty)</div>
+          </div>
+        </div>
+      </section>
+
     </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <div class="tDot" id="toastDot"></div>
+  <div>
+    <div class="tTitle" id="toastTitle">Notice</div>
+    <div class="tMsg" id="toastMsg">—</div>
   </div>
+</div>
 
-  <script>
-    // =========================
-    // Config
-    // =========================
-    const API = "http://127.0.0.1:8000";
-    const THRESHOLD = 0.80;
+<script>
+  // ============================================
+  // STATE + HELPERS
+  // ============================================
+  const THRESHOLD = 0.80;
 
-    // =========================
-    // State
-    // =========================
-    let latest = null;
-    let selected = new Set();         // indices
-    let lastBulkResult = null;        // {created, failed}
-    let googleConnected = null;       // true/false/null (unknown)
+  let API = "http://127.0.0.1:8000";
+  let workspace = "default";
 
-    // =========================
-    // DOM helpers
-    // =========================
-    const $ = (id) => document.getElementById(id);
+  let latestData = null;       // /latest response -> data
+  let selectedTaskIdx = new Set();
 
-    function setMsg(text, kind=""){
-      const el = $("message");
-      el.className = "msg" + (kind ? " " + kind : "");
-      el.textContent = text;
+  // keep reference globally
+  let brainNetwork = null;
+  let brainNodeMeta = {}; // id -> {kind,label,meta}
+
+  const $ = (id) => document.getElementById(id);
+
+  function safeStr(x){ return (x===null || x===undefined) ? "" : String(x); }
+
+  function toast(title,msg,type="info"){
+    const t = $("toast");
+    $("toastTitle").textContent = title;
+    $("toastMsg").textContent = msg;
+    $("toastDot").style.background =
+      type==="error" ? "var(--bad)" :
+      type==="warn"  ? "var(--warn)" :
+                       "var(--accent2)";
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),4000);
+  }
+
+  function setStatus(text){
+    $("statusLine").textContent = text;
+  }
+
+  function renderList(container,items){
+    container.innerHTML="";
+    if(!items || !items.length){
+      const d=document.createElement("div");
+      d.className="item";
+      d.innerHTML=`<div class="itemMeta">No items</div>`;
+      container.appendChild(d);
+      return;
     }
 
-    function setPill(el, kind, text){
-      el.className = "pill " + (kind || "");
-      el.innerHTML = `<span class="dot"></span>${text}`;
-    }
-
-    $("apiText").textContent = API.replace("http://","");
-
-    // =========================
-    // Network
-    // =========================
-    async function api(path, opts = {}){
-      const res = await fetch(API + path, opts);
-      const text = await res.text();
-      let json = null;
-      try { json = JSON.parse(text); } catch {}
-      if(!res.ok){
-        const detail = (json && (json.detail || json.error)) ? (json.detail || json.error) : text;
-        throw new Error(`${res.status} ${res.statusText}: ${detail}`);
-      }
-      return json ?? text;
-    }
-
-    async function checkBackend(){
-      try{
-        // Prefer /health if you have it; fallback to /latest
-        let out;
-        try { out = await api("/health"); }
-        catch { out = await api("/latest"); }
-        setPill($("pillBackend"), "ok", `Backend: online`);
-        return true;
-      }catch(e){
-        setPill($("pillBackend"), "bad", `Backend: offline`);
-        return false;
-      }
-    }
-
-    async function checkGoogleStatus(){
-      // If your backend exposes /google_status, we’ll use it.
-      // Otherwise we keep "unknown" and only rely on connect flow + approve errors.
-      try{
-        const out = await api("/google_status");
-        if(out && typeof out.connected === "boolean"){
-          googleConnected = out.connected;
-          setPill($("pillGoogle"), out.connected ? "ok" : "warn", `Google: ${out.connected ? "connected" : "not connected"}`);
-          return;
-        }
-      }catch{
-        // keep unknown
-      }
-      googleConnected = null;
-      setPill($("pillGoogle"), "warn", "Google: unknown");
-    }
-
-    // =========================
-    // Tauri external open (prevents “opened as file”)
-    // =========================
-    async function openExternal(url){
-      try{
-        // Tauri v2 style (window.__TAURI__.shell.open)
-        if(window.__TAURI__ && window.__TAURI__.shell && typeof window.__TAURI__.shell.open === "function"){
-          await window.__TAURI__.shell.open(url);
-          return;
-        }
-      }catch{}
-      // Fallback
-      window.open(url, "_blank", "noopener");
-    }
-
-    // =========================
-    // Action helpers
-    // =========================
-    const safeStr = (x) => (x === null || x === undefined) ? "" : String(x);
-    const actionTitle = (a) => safeStr(a.action || "").trim() || "(no action text)";
-
-    function fmtPct(x){
-      if (x === null || x === undefined || Number.isNaN(Number(x))) return "—";
-      return Math.round(Number(x) * 100) + "%";
-    }
-
-    function bucket(a){
-      const c = Number(a.confidence);
-      if(!Number.isFinite(c)) return "review";
-      if(c >= THRESHOLD) return "auto";
-      if(c >= 0.60) return "review";
-      return "low";
-    }
-
-    function computeDedupeKey(a){
-      if(a && a.dedupe_key) return String(a.dedupe_key);
-      const d = safeStr(a.deadline || "").trim();
-      const t = actionTitle(a);
-      if(!d || !t) return "";
-      return `${d}|${t}`;
-    }
-
-    function getApprovedKeySet(){
-      const set = new Set();
-      if(latest && Array.isArray(latest.approved_keys)){
-        for(const k of latest.approved_keys) set.add(String(k));
-      }
-      if(latest && latest.approved_map && typeof latest.approved_map === "object"){
-        for(const k of Object.keys(latest.approved_map)) set.add(String(k));
-      }
-      return set;
-    }
-
-    function isDuplicate(i, a){
-      const k = computeDedupeKey(a);
-      const approved = getApprovedKeySet();
-      if(k && approved.has(k)) return true;
-
-      if(lastBulkResult && Array.isArray(lastBulkResult.failed)){
-        const hit = lastBulkResult.failed.find(f =>
-          Number(f.index) === Number(i) &&
-          String(f.error || "").toLowerCase().includes("duplicate")
-        );
-        if(hit) return true;
-      }
-      return false;
-    }
-
-    function shouldShowAction(a, i){
-      const f = safeStr($("filter").value).trim().toLowerCase();
-      if(f){
-        const hay = (actionTitle(a)+" "+safeStr(a.owner||"")+" "+safeStr(a.source_sentence||"")).toLowerCase();
-        if(!hay.includes(f)) return false;
-      }
-      const incLow = $("includeLow").checked;
-      if(!incLow && bucket(a) === "low") return false;
-      return true;
-    }
-
-    function escapeHtml(s){
-      return s.replace(/[&<>"']/g, (c) => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-      }[c]));
-    }
-
-    function updateButtons(){
-      $("selectedCount").textContent = `${selected.size} selected`;
-      $("btnAddSelected").disabled = selected.size === 0;
-
-      const actions = (latest && Array.isArray(latest.actions)) ? latest.actions : [];
-      let canAuto = false;
-      for(let i=0;i<actions.length;i++){
-        const a = actions[i];
-        if(!shouldShowAction(a,i)) continue;
-        if(bucket(a)!=="auto") continue;
-        if(isDuplicate(i,a)) continue;
-        canAuto = true;
-        break;
-      }
-      $("btnAddAuto").disabled = !canAuto;
-    }
-
-    function setCounts(){
-      const actions = (latest && Array.isArray(latest.actions)) ? latest.actions : [];
-      let nAuto=0,nReview=0,nLow=0,nDup=0,nShown=0;
-      for(let i=0;i<actions.length;i++){
-        const a = actions[i];
-        if(!shouldShowAction(a,i)) continue;
-        nShown++;
-        const b = bucket(a);
-        if(b==="auto") nAuto++;
-        else if(b==="review") nReview++;
-        else nLow++;
-        if(isDuplicate(i,a)) nDup++;
-      }
-      $("chipAuto").textContent = `Auto: ${nAuto} (≥80%)`;
-      $("chipReview").textContent = `Needs review: ${nReview} (60–79%)`;
-      $("chipLow").textContent = `Low: ${nLow} (<60%)`;
-      $("chipDup").textContent = `Duplicates: ${nDup}`;
-      $("chipTh").textContent = `Threshold: ${Math.round(THRESHOLD*100)}%`;
-    }
-
-    function render(){
-      const list = $("list");
-      list.innerHTML = "";
-
-      if(!latest){
-        setCounts();
-        updateButtons();
-        return;
-      }
-
-      const actions = Array.isArray(latest.actions) ? latest.actions : [];
-      setCounts();
-
-      let any = false;
-
-      for(let i=0;i<actions.length;i++){
-        const a = actions[i];
-        if(!shouldShowAction(a,i)) continue;
-        any = true;
-
-        const b = bucket(a);
-        const dup = isDuplicate(i,a);
-
-        const item = document.createElement("div");
-        item.className = "item " + (dup ? "dup" : (b==="auto" ? "auto" : (b==="review" ? "review" : "low")));
-
-        const top = document.createElement("div");
-        top.className = "itemTop";
-
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = selected.has(i);
-        cb.addEventListener("change", () => {
-          if(cb.checked) selected.add(i);
-          else selected.delete(i);
-          updateButtons();
-        });
-
-        const title = document.createElement("div");
-        title.className = "title";
-        title.textContent = actionTitle(a);
-
-        const badge1 = document.createElement("span");
-        badge1.className = "mini " + (dup ? "bad" : (b==="auto" ? "ok" : "warn"));
-        badge1.textContent = dup ? "Duplicate" : (b==="auto" ? "Auto" : (b==="review" ? "Review" : "Low"));
-
-        const badge2 = document.createElement("span");
-        badge2.className = "mini";
-        badge2.textContent = fmtPct(a.confidence);
-
-        const ownerWrap = document.createElement("div");
-        ownerWrap.className = "ownerPill";
-
-        const owner = document.createElement("span");
-        owner.className = "mini";
-        owner.textContent = `Owner: ${safeStr(a.owner || "—")}`;
-        ownerWrap.appendChild(owner);
-
-        top.appendChild(cb);
-        top.appendChild(title);
-        top.appendChild(badge1);
-        top.appendChild(badge2);
-        top.appendChild(ownerWrap);
-
-        const mid = document.createElement("div");
-        mid.className = "itemMid";
-
-        const lbl = document.createElement("span");
-        lbl.className = "small";
-        lbl.textContent = "Deadline:";
-
-        const date = document.createElement("input");
-        date.type = "date";
-        if(a.deadline && /^\d{4}-\d{2}-\d{2}$/.test(String(a.deadline))) date.value = String(a.deadline);
-        date.addEventListener("change", () => { a.deadline = date.value || null; });
-
-        const btnToday = document.createElement("button");
-        btnToday.textContent = "Today";
-        btnToday.addEventListener("click", () => {
-          const d = new Date();
-          const v = d.toISOString().slice(0,10);
-          date.value = v; a.deadline = v;
-        });
-
-        const btnTomorrow = document.createElement("button");
-        btnTomorrow.textContent = "Tomorrow";
-        btnTomorrow.addEventListener("click", () => {
-          const d = new Date();
-          d.setDate(d.getDate()+1);
-          const v = d.toISOString().slice(0,10);
-          date.value = v; a.deadline = v;
-        });
-
-        const btn7 = document.createElement("button");
-        btn7.textContent = "+7 days";
-        btn7.addEventListener("click", () => {
-          const d = new Date();
-          d.setDate(d.getDate()+7);
-          const v = d.toISOString().slice(0,10);
-          date.value = v; a.deadline = v;
-        });
-
-        const btnConfirm = document.createElement("button");
-        btnConfirm.className = "primary";
-        btnConfirm.textContent = date.value ? `Confirm (${date.value})` : "Confirm";
-        date.addEventListener("input", () => btnConfirm.textContent = date.value ? `Confirm (${date.value})` : "Confirm");
-        date.addEventListener("change", () => btnConfirm.textContent = date.value ? `Confirm (${date.value})` : "Confirm");
-
-        btnConfirm.addEventListener("click", async () => {
-          selected.clear(); selected.add(i); updateButtons();
-          await approveSelected();
-        });
-
-        const btnUndo = document.createElement("button");
-        btnUndo.className = "danger";
-        btnUndo.textContent = "Undo";
-        btnUndo.addEventListener("click", async () => {
-          try{
-            setMsg("Undoing…");
-            const out = await api("/undo", {
-              method:"POST",
-              headers:{"Content-Type":"application/json"},
-              body: JSON.stringify({ index: i })
-            });
-            $("raw").textContent = JSON.stringify(out, null, 2);
-            setMsg("Undo done. Reloading…", "ok");
-            await loadLatest({ autoApprove: false });
-          }catch(e){
-            $("raw").textContent = String(e);
-            setMsg(`Undo error: ${e.message}`, "bad");
-          }
-        });
-
-        // Disable undo if clearly pointless (best-effort)
-        const approvedSet = getApprovedKeySet();
-        const dk = computeDedupeKey(a);
-        btnUndo.disabled = !(dk && approvedSet.has(dk));
-
-        // Open event: if you have a real event id mapping, great.
-        // Otherwise we provide a fallback to open Google Calendar home.
-        const open = document.createElement("a");
-        open.textContent = "Open calendar";
-        open.href = "https://calendar.google.com/calendar/u/0/r";
-        open.target = "_blank";
-        open.rel = "noopener";
-        open.addEventListener("click", async (ev) => {
-          // If your backend supports /event_link?index=N, use it.
-          try{
-            const out = await api(`/event_link?index=${encodeURIComponent(i)}`);
-            if(out && out.url){
-              ev.preventDefault();
-              await openExternal(out.url);
-            }
-          }catch{
-            // ignore, default link opens calendar home
-          }
-        });
-
-        mid.appendChild(lbl);
-        mid.appendChild(date);
-        mid.appendChild(btnToday);
-        mid.appendChild(btnTomorrow);
-        mid.appendChild(btn7);
-        mid.appendChild(btnConfirm);
-        mid.appendChild(open);
-        mid.appendChild(btnUndo);
-
-        const src = document.createElement("div");
-        src.className = "src";
-        src.innerHTML = `<b>Source:</b> ${escapeHtml(safeStr(a.source_sentence || ""))}`;
-
-        item.appendChild(top);
-        item.appendChild(mid);
-        item.appendChild(src);
-
-        list.appendChild(item);
-      }
-
-      if(!any){
-        const empty = document.createElement("div");
-        empty.className = "small";
-        empty.textContent = "No actions match your filters.";
-        list.appendChild(empty);
-      }
-
-      updateButtons();
-    }
-
-    // =========================
-    // Actions (API flows)
-    // =========================
-    async function loadLatest({ autoApprove=false } = {}){
-      setMsg("Loading latest…");
-      lastBulkResult = null;
-
-      const out = await api("/latest");
-      $("raw").textContent = JSON.stringify(out, null, 2);
-
-      latest = out && out.data ? out.data : out;
-
-      // keep selection in bounds
-      const n = (latest && Array.isArray(latest.actions)) ? latest.actions.length : 0;
-      selected = new Set([...selected].filter(i => i>=0 && i<n));
-
-      setMsg(`Loaded ${n} action(s).`, "ok");
-      render();
-
-      if(autoApprove){
-        const actions = Array.isArray(latest.actions) ? latest.actions : [];
-        selected.clear();
-        for(let i=0;i<actions.length;i++){
-          const a = actions[i];
-          if(!shouldShowAction(a,i)) continue;
-          if(bucket(a)!=="auto") continue;
-          if(isDuplicate(i,a)) continue;
-          selected.add(i);
-        }
-        render();
-        if(selected.size>0){
-          await approveSelected();
-        }
-      }
-    }
-
-    async function reextract(){
-      setMsg("Re-extracting…");
-      lastBulkResult = null;
-      const out = await api("/reextract", { method:"POST" });
-      $("raw").textContent = JSON.stringify(out, null, 2);
-      setMsg("Re-extracted. Loading latest…", "ok");
-      await loadLatest({ autoApprove: $("autoApproveOnLoad").checked });
-    }
-
-    async function resetApprovals(){
-      setMsg("Resetting approvals…");
-      lastBulkResult = null;
-      const out = await api("/reset_approvals", { method:"POST" });
-      $("raw").textContent = JSON.stringify(out, null, 2);
-      selected.clear();
-      setMsg("Approvals reset. Loading latest…", "ok");
-      await loadLatest({ autoApprove:false });
-    }
-
-    function autofillMissingDeadlines(){
-      if(!latest || !Array.isArray(latest.actions)) return;
-      const d = new Date(); d.setDate(d.getDate()+1);
-      const tomorrow = d.toISOString().slice(0,10);
-      for(const a of latest.actions){
-        if(!a.deadline) a.deadline = tomorrow;
-      }
-      setMsg("Filled missing deadlines with tomorrow.", "ok");
-      render();
-    }
-
-    function selectAll(){
-      if(!latest || !Array.isArray(latest.actions)) return;
-      selected.clear();
-      for(let i=0;i<latest.actions.length;i++){
-        const a = latest.actions[i];
-        if(!shouldShowAction(a,i)) continue;
-        selected.add(i);
-      }
-      render();
-    }
-    function selectNone(){ selected.clear(); render(); }
-    function selectHigh(){
-      if(!latest || !Array.isArray(latest.actions)) return;
-      selected.clear();
-      for(let i=0;i<latest.actions.length;i++){
-        const a = latest.actions[i];
-        if(!shouldShowAction(a,i)) continue;
-        if(bucket(a)==="auto") selected.add(i);
-      }
-      render();
-    }
-
-    async function approveSelected(){
-      if(!latest || !Array.isArray(latest.actions)) return;
-      if(selected.size===0){
-        setMsg("Select at least 1 action.", "warn");
-        return;
-      }
-
-      const indices = [...selected].sort((a,b)=>a-b);
-      const deadlines = {};
-      for(const i of indices){
-        deadlines[String(i)] = safeStr(latest.actions[i].deadline || "");
-      }
-
-      const missing = indices.filter(i => !deadlines[String(i)] || !/^\d{4}-\d{2}-\d{2}$/.test(deadlines[String(i)]));
-      if(missing.length){
-        setMsg(`Missing/invalid deadline for index: ${missing.join(", ")} (set date first).`, "warn");
-        return;
-      }
-
-      setMsg(`Approving ${indices.length}…`);
-      try{
-        const out = await api("/approve_bulk", {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({ indices, deadlines })
-        });
-
-        lastBulkResult = out;
-        $("raw").textContent = JSON.stringify(out, null, 2);
-
-        const createdN = Array.isArray(out.created) ? out.created.length : 0;
-        const failedN  = Array.isArray(out.failed) ? out.failed.length : 0;
-        const dupN     = Array.isArray(out.failed) ? out.failed.filter(f => String(f.error||"").toLowerCase().includes("duplicate")).length : 0;
-
-        if(String(out.detail||"").toLowerCase().includes("google") || String(out.error||"").toLowerCase().includes("google")){
-          googleConnected = false;
-          setPill($("pillGoogle"), "warn", "Google: not connected");
-        }
-
-        setMsg(`Done. Created: ${createdN}. Duplicates: ${dupN}. Failed: ${failedN}. Reloading…`, createdN>0 ? "ok" : (failedN>0 ? "warn" : ""));
-        await loadLatest({ autoApprove:false });
-
-        // Clear selection after run
-        selected.clear();
-        render();
-
-      }catch(e){
-        const m = String(e.message||"");
-        if(m.toLowerCase().includes("google not connected") || m.toLowerCase().includes("auth")){
-          googleConnected = false;
-          setPill($("pillGoogle"), "warn", "Google: not connected");
-          setMsg("Google not connected. Click Connect Google first.", "warn");
-        }else{
-          setMsg(`Approve error: ${m}`, "bad");
-        }
-        throw e;
-      }
-    }
-
-    async function connectGoogle(){
-      // Open /auth/google in external browser (not inside webview)
-      setMsg("Opening Google auth in your browser…", "ok");
-      await openExternal(API + "/auth/google");
-      // After user completes auth, we can refresh status
-      setTimeout(checkGoogleStatus, 1200);
-    }
-
-    // =========================
-    // Upload audio
-    // =========================
-    function wireUpload(){
-      const file = $("file");
-      const btn = $("btnUpload");
-
-      file.addEventListener("change", () => {
-        const f = file.files && file.files[0] ? file.files[0] : null;
-        $("fileName").textContent = f ? f.name : "No file selected";
-        btn.disabled = !f;
-      });
-
-      btn.addEventListener("click", async () => {
-        const f = file.files && file.files[0] ? file.files[0] : null;
-        if(!f) return;
-
-        try{
-          setMsg("Uploading audio…");
-          const fd = new FormData();
-          fd.append("file", f);
-
-          const res = await fetch(API + "/upload", { method:"POST", body: fd });
-          const text = await res.text();
-          let out = null;
-          try{ out = JSON.parse(text); }catch{ out = { raw: text }; }
-
-          if(!res.ok){
-            const detail = out && (out.detail || out.error) ? (out.detail || out.error) : text;
-            throw new Error(`${res.status} ${res.statusText}: ${detail}`);
-          }
-
-          $("raw").textContent = JSON.stringify(out, null, 2);
-          setMsg("Upload complete. Loading latest…", "ok");
-          await loadLatest({ autoApprove: $("autoApproveOnLoad").checked });
-
-        }catch(e){
-          setMsg(`Upload error: ${e.message}`, "bad");
-        }
-      });
-    }
-
-    // =========================
-    // Wiring
-    // =========================
-    window.addEventListener("DOMContentLoaded", async () => {
-      wireUpload();
-
-      $("btnLoad").addEventListener("click", () => loadLatest({ autoApprove: $("autoApproveOnLoad").checked }));
-      $("btnReextract").addEventListener("click", reextract);
-      $("btnReset").addEventListener("click", resetApprovals);
-      $("btnConnectGoogle").addEventListener("click", connectGoogle);
-
-      $("btnSelectHigh").addEventListener("click", selectHigh);
-      $("btnSelectAll").addEventListener("click", selectAll);
-      $("btnSelectNone").addEventListener("click", selectNone);
-
-      $("btnAutofill").addEventListener("click", autofillMissingDeadlines);
-
-      $("btnAddSelected").addEventListener("click", approveSelected);
-      $("btnAddAuto").addEventListener("click", async () => { selectHigh(); await approveSelected(); });
-
-      $("filter").addEventListener("input", render);
-      $("includeLow").addEventListener("change", render);
-      $("autoApproveOnLoad").addEventListener("change", () => {
-        // no auto action here; only affects future loads
-      });
-
-      // Initial checks
-      await checkBackend();
-      await checkGoogleStatus();
-
-      // Start with latest
-      try{
-        await loadLatest({ autoApprove:false });
-      }catch(e){
-        setMsg(`Cannot load: ${e.message}`, "bad");
-      }
+    items.forEach(it=>{
+      const div=document.createElement("div");
+      div.className="item";
+      div.innerHTML=`
+        <div class="itemTop">
+          <div class="itemTitle">${safeStr(it.title || it)}</div>
+        </div>
+        <div class="itemMeta">${safeStr(it.detail || "")}</div>
+      `;
+      container.appendChild(div);
     });
-  </script>
+  }
+
+  async function api(path,opts={}){
+    const url = `${API}${path}?workspace=${workspace}`;
+    const r = await fetch(url,opts);
+    if(!r.ok){
+      const txt = await r.text();
+      throw new Error(txt);
+    }
+    return r.json();
+  }
+
+  function switchView(v){
+    document.querySelectorAll("[id^=view-]").forEach(el=>el.style.display="none");
+    $("view-"+v).style.display="block";
+
+    document.querySelectorAll(".nav button").forEach(b=>{
+      b.classList.toggle("active",b.dataset.view===v);
+    });
+  }
+
+  document.querySelectorAll(".nav button").forEach(btn=>{
+    btn.onclick=()=>switchView(btn.dataset.view);
+  });
+
+  $("btnSet").onclick=()=>{
+    API = $("apiBase").value.trim();
+    workspace = $("workspace").value.trim() || "default";
+    toast("Workspace updated",workspace);
+  };
+
+  $("btnOpenDocs").onclick=()=>{
+    window.open(API+"/docs","_blank");
+  };
+
+  // ----------------------------------
+  // CORE LOADERS
+  // ----------------------------------
+  async function loadLatest(){
+    try{
+      setStatus("Loading latest…");
+      const r = await api("/latest");
+      latestData = r.data;
+
+      const actions = latestData.actions || [];
+      $("kpiActions").textContent = actions.length;
+      $("kpiActionsText").textContent = actions.length+" actions detected";
+
+      setStatus("Latest loaded");
+    }catch(e){
+      toast("Error",e.message,"error");
+    }
+  }
+
+  async function loadDashboard(){
+    try{
+      const r = await api("/dashboard");
+      const d = r.dashboard || {};
+
+      $("dashSummary").textContent = d.summary || "—";
+      $("dashMeta").textContent = `meetings: ${d.total_meetings||0} • actions: ${d.total_actions||0}`;
+
+      renderList($("dashPoints"),d.key_points||[]);
+      renderList($("dashRisks"),d.risks||[]);
+      renderList($("dashDecisions"),d.decisions||[]);
+    }catch(e){
+      toast("Dashboard error",e.message,"error");
+    }
+  }
+
+  async function loadInsights(){
+    try{
+      const r = await api("/insights");
+      renderList($("insightList"),r.insights||[]);
+    }catch(e){
+      toast("Insights error",e.message,"error");
+    }
+  }
+
+  async function loadPredictions(){
+    try{
+      const r = await api("/predictions");
+      renderList($("predictionList"),r.predictions||[]);
+    }catch(e){
+      toast("Prediction error",e.message,"error");
+    }
+  }
+
+  async function uploadMeeting(){
+    const file = $("file").files[0];
+    if(!file){
+      toast("No file","Select an audio file","warn");
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("file",file);
+
+    try{
+      const r = await fetch(`${API}/upload_audio?workspace=${workspace}`,{
+        method:"POST",
+        body:fd
+      });
+
+      if(!r.ok){
+        const txt = await r.text();
+        throw new Error(txt);
+      }
+
+      const j = await r.json();
+      const summary = j.data?.summary;
+      $("uploadSummary").textContent =
+        typeof summary === "object"
+          ? (summary.summary || JSON.stringify(summary))
+          : (summary || "—");
+      const actions = (j.data && j.data.actions) ? j.data.actions : [];
+
+      renderList(
+        $("uploadActions"),
+        actions.map(a => ({
+          title: a.action || "Task",
+          detail: `Owner: ${a.owner || "?"} • Deadline: ${a.deadline || "?"}`
+        }))
+      );
+      toast("Upload complete","Meeting processed");
+      await loadLatest();
+      await loadDashboard();
+    }catch(e){
+      toast("Upload error",e.message,"error");
+    }
+  }
+
+  async function askCopilot(){
+    const q = $("copilotQ").value.trim();
+    if(!q) return;
+
+    try{
+      let r;
+      try{
+        r = await fetch(`${API}/copilot?workspace=${workspace}`,{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({question:q})
+        });
+      }catch{
+        r = await fetch(`${API}/ask?workspace=${workspace}`,{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({question:q})
+        });
+      }
+
+      const j = await r.json();
+      $("copilotA").textContent = j.answer || JSON.stringify(j,null,2);
+
+    }catch(e){
+      toast("Copilot error",e.message,"error");
+    }
+  }
+
+  // ----------------------------------
+  // COMPANY BRAIN
+  // ----------------------------------
+  
+  function showBrainDetails(title, lines=[], type="info"){
+    const msg = (lines || []).filter(Boolean).join("\n");
+    toast(title, msg || "—", type);
+  }
+
+  async function loadBrain(){
+    try{
+      const r = await fetch(`${API}/company_brain?workspace=${workspace}`);
+      if(!r.ok){
+        const txt = await r.text();
+        throw new Error(txt);
+      }
+      const j = await r.json();
+      const brain = j.brain || {};
+
+      renderList($("brainPeople"), (brain.people || []).map(p => ({title:p})));
+      renderList($("brainDecisions"), (brain.decisions || []).map(d => ({title:d})));
+      renderList($("brainTasks"), (brain.tasks || []).map(t => ({
+        title: t.action || "Task",
+        detail: `Owner: ${t.owner || "?"} • Deadline: ${t.deadline || "?"}`
+      })));
+      renderList($("brainTopics"), (brain.topics || []).map(t => ({
+        title: t.topic,
+        detail: `mentions: ${t.count}`
+      })));
+    }catch(e){
+      toast("Brain error", e.message, "error");
+    }
+  }
+
+  async function loadBrainGraph(){
+    try{
+      const r = await fetch(`${API}/company_brain/graph?workspace=${workspace}`);
+      if(!r.ok){
+        const txt = await r.text();
+        throw new Error(txt);
+      }
+      const j = await r.json();
+
+      const graph = j.graph || {};
+      const rawNodes = graph.nodes || [];
+      const rawEdges = graph.edges || [];
+
+      // dedupe nodes + capture meta
+      const nodeMap = {};
+      brainNodeMeta = {};
+
+      rawNodes.forEach(n=>{
+        if(!n || !n.id) return;
+
+        if(!nodeMap[n.id]){
+          nodeMap[n.id] = {
+            id: n.id,
+            label: n.label || n.id,
+            group: n.kind || "unknown"
+          };
+        }
+
+        brainNodeMeta[n.id] = {
+          kind: n.kind || "unknown",
+          label: n.label || n.id,
+          meta: n.meta || {}
+        };
+      });
+
+      const nodes = new vis.DataSet(Object.values(nodeMap));
+
+      const edges = new vis.DataSet(
+        rawEdges.map(e=>({
+          from: e.src,
+          to: e.dst,
+          label: e.rel || ""
+        }))
+      );
+
+      const container = $("brainGraph");
+      if(!container){
+        throw new Error("Missing #brainGraph element (check HTML).");
+      }
+
+      // destroy old network (prevents lag/weirdness)
+      if(brainNetwork){
+        brainNetwork.destroy();
+        brainNetwork = null;
+      }
+
+      const options = {
+        nodes:{
+          shape:"dot",
+          size:18,
+          font:{color:"#EAF0FF", size:14},
+          borderWidth:1
+        },
+        edges:{
+          arrows:"to",
+          width:1.5,
+          color:"#7C5CFF",
+          font:{color:"#BFD3FF", size:10, align:"middle"},
+          smooth:{type:"dynamic"}
+        },
+        physics:{
+          stabilization:false,
+          barnesHut:{
+            gravitationalConstant:-9000,
+            centralGravity:0.3,
+            springLength:120,
+            springConstant:0.04
+          }
+        },
+        interaction:{
+          hover:true,
+          tooltipDelay:150
+        },
+        groups:{
+          person:{color:"#57D6FF"},
+          task:{color:"#7C5CFF"},
+          decision:{color:"#FFCC4A"},
+          topic:{color:"#2FE07D"},
+          project:{color:"#FF7A7A"},
+          team:{color:"#FFFFFF"},
+          date:{color:"#C7C7FF"},
+          unknown:{color:"#9AA4B2"}
+        }
+      };
+
+      brainNetwork = new vis.Network(container, {nodes, edges}, options);
+
+      // CLICK INTELLIGENCE
+      brainNetwork.on("click", (params)=>{
+        const nid = (params.nodes && params.nodes[0]) ? params.nodes[0] : null;
+
+        if(!nid) return;
+
+        const info = brainNodeMeta[nid] || {kind:"unknown", label:nid, meta:{}};
+        const kind = info.kind;
+        const label = info.label;
+        const meta = info.meta || {};
+
+        if(kind === "task"){
+          showBrainDetails(
+            `Task: ${label}`,
+            [
+              `Owner: ${meta.owner ?? "?"}`,
+              `Deadline: ${meta.deadline ?? "?"}`,
+              `Confidence: ${meta.confidence ?? "?"}`,
+              meta.source ? `Source: ${meta.source}` : null,
+              `ID: ${nid}`
+            ],
+            "info"
+          );
+          return;
+        }
+
+        if(kind === "person"){
+          const owned = rawEdges
+            .filter(e=>e.rel==="owns" && e.src===nid)
+            .map(e=>{
+              const t = brainNodeMeta[e.dst];
+              return t ? t.label : e.dst;
+            });
+
+          showBrainDetails(
+            `Person: ${label}`,
+            [
+              `Owned tasks: ${owned.length}`,
+              owned.length ? `• ${owned.slice(0,8).join("\n• ")}` : "—",
+              `ID: ${nid}`
+            ],
+            "info"
+          );
+          return;
+        }
+
+        if(kind === "project"){
+          const related = rawEdges
+            .filter(e=>e.rel==="relates_to" && e.dst===nid)
+            .map(e=>{
+              const t = brainNodeMeta[e.src];
+              return t ? t.label : e.src;
+            });
+
+          showBrainDetails(
+            `Project: ${label}`,
+            [
+              meta.count != null ? `Mentions: ${meta.count}` : null,
+              `Related tasks: ${related.length}`,
+              related.length ? `• ${related.slice(0,8).join("\n• ")}` : "—",
+              `ID: ${nid}`
+            ],
+            "info"
+          );
+          return;
+        }
+
+        if(kind === "topic"){
+          const mentions = rawEdges
+            .filter(e=>e.rel==="mentions" && e.dst===nid)
+            .map(e=>{
+              const t = brainNodeMeta[e.src];
+              return t ? `${t.kind}: ${t.label}` : e.src;
+            });
+
+          showBrainDetails(
+            `Topic: ${label}`,
+            [
+              meta.count != null ? `Mentions: ${meta.count}` : null,
+              `Mentioned by: ${mentions.length}`,
+              mentions.length ? `• ${mentions.slice(0,8).join("\n• ")}` : "—",
+              `ID: ${nid}`
+            ],
+            "info"
+          );
+          return;
+        }
+
+        if(kind === "date"){
+          showBrainDetails(`Date: ${label}`, [`ID: ${nid}`], "info");
+          return;
+        }
+
+        showBrainDetails(
+          `${kind.toUpperCase()}: ${label}`,
+          [
+            Object.keys(meta).length ? `Meta: ${JSON.stringify(meta)}` : null,
+            `ID: ${nid}`
+          ],
+          "info"
+        );
+      });
+
+    }catch(e){
+      toast("Graph error", e.message, "error");
+    }
+  }
+  // ----------------------------------
+  // BUTTON HOOKS
+  // ----------------------------------
+  $("btnLoadLatest").onclick=loadLatest;
+  $("btnRunDashboard").onclick=loadDashboard;
+  $("btnUpload").onclick=uploadMeeting;
+  $("btnRefreshLatest2").onclick=loadLatest;
+  $("btnLoadInsights").onclick=loadInsights;
+  $("btnLoadPredictions").onclick=loadPredictions;
+  $("btnAsk").onclick=askCopilot;
+
+  $("btnDumpLatest").onclick=async()=>{
+    const j = await api("/latest");
+    $("debugOut").textContent = JSON.stringify(j,null,2);
+  };
+
+  $("btnDumpDashboard").onclick=async()=>{
+    const j = await api("/dashboard");
+    $("debugOut").textContent = JSON.stringify(j,null,2);
+  };
+
+  $("btnDumpAll").onclick=async()=>{
+    const a = await api("/latest");
+    const b = await api("/dashboard");
+    $("debugOut").textContent = JSON.stringify({latest:a,dashboard:b},null,2);
+  };
+
+  $("btnLoadBrain").onclick = async ()=>{
+    await loadBrain();
+    // graph needs layout time sometimes
+    setTimeout(()=>{ loadBrainGraph(); }, 100);
+  };
+
+  $("btnConnectGoogle").onclick = ()=>{
+    window.open(`${API}/auth/google?mode=redirect&workspace=${workspace}`, "_blank");
+  };
+
+  $("btnRefreshAll").onclick = async ()=>{
+    // If your backend has /refresh_all, use it. If not, fallback.
+    try{
+      const r = await fetch(`${API}/refresh_all?workspace=${workspace}`);
+      if(r.ok){
+        toast("Refreshed","/refresh_all completed");
+        await loadLatest();
+        await loadDashboard();
+        return;
+      }
+    }catch(_){ /* ignore */ }
+
+    toast("Refreshed","Fallback refresh");
+    await loadLatest();
+    await loadDashboard();
+  };
+
+  // initial load
+  loadLatest();
+  loadDashboard();
+</script>
+
 </body>
 </html>

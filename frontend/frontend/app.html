@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>FollowThrough</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100">
+
+<div class="flex h-screen">
+
+<!-- SIDEBAR -->
+
+<div class="w-64 bg-white shadow-lg p-6">
+
+<h1 class="text-2xl font-bold mb-10">
+FollowThrough
+</h1>
+
+<div class="space-y-4">
+
+<button onclick="dashboard()" class="block hover:text-blue-600">
+Dashboard
+</button>
+
+<button onclick="actions()" class="block hover:text-blue-600">
+Actions
+</button>
+
+<button onclick="timeline()" class="block hover:text-blue-600">
+Timeline
+</button>
+
+<button onclick="copilot()" class="block hover:text-blue-600">
+Copilot
+</button>
+
+<button onclick="reports()" class="block hover:text-blue-600">
+Reports
+</button>
+
+</div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="flex-1 p-10 overflow-y-auto">
+
+<div id="main"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const API="http://127.0.0.1:8000"
+
+async function dashboard(){
+
+let dash=await fetch(API+"/dashboard")
+dash=await dash.json()
+
+let score=await fetch(API+"/meeting_score")
+score=await score.json()
+
+document.getElementById("main").innerHTML=`
+
+<h1 class="text-3xl font-bold mb-6">Dashboard</h1>
+
+<div class="grid grid-cols-2 gap-6">
+
+<div class="bg-white p-6 rounded-xl shadow">
+
+<h2 class="font-bold mb-2">Meeting Score</h2>
+
+<div class="text-3xl">${score.score}</div>
+
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow">
+
+<h2 class="font-bold mb-2">Executive Summary</h2>
+
+<pre>${dash.dashboard}</pre>
+
+</div>
+
+</div>
+
+`
+
+}
+
+async function actions(){
+
+let res=await fetch(API+"/latest")
+res=await res.json()
+
+let acts=res.data.actions || []
+
+let html=acts.map(a=>`
+
+<div class="bg-white p-4 rounded shadow mb-4">
+
+<b>${a.action}</b>
+
+<div class="text-sm text-gray-500">
+
+Owner: ${a.owner||"—"}  
+Deadline: ${a.deadline||"—"}
+
+</div>
+
+</div>
+
+`).join("")
+
+document.getElementById("main").innerHTML=`
+
+<h1 class="text-3xl font-bold mb-6">Actions</h1>
+
+${html}
+
+`
+
+}
+
+async function timeline(){
+
+let res=await fetch(API+"/project_timeline")
+res=await res.json()
+
+document.getElementById("main").innerHTML=`
+
+<h1 class="text-3xl font-bold mb-6">Timeline</h1>
+
+<pre class="bg-white p-6 rounded shadow">
+
+${res.timeline}
+
+</pre>
+
+`
+
+}
+
+function copilot(){
+
+document.getElementById("main").innerHTML=`
+
+<h1 class="text-3xl font-bold mb-6">Copilot</h1>
+
+<input id="q" class="border p-2 w-full mb-4" placeholder="Ask anything about meetings...">
+
+<button onclick="ask()" class="bg-blue-500 text-white px-4 py-2 rounded">
+
+Ask
+
+</button>
+
+<pre id="a" class="bg-white p-6 mt-6 rounded shadow"></pre>
+
+`
+
+}
+
+async function ask(){
+
+let q=document.getElementById("q").value
+
+let res=await fetch(API+"/copilot?question="+encodeURIComponent(q),{
+
+method:"POST"
+
+})
+
+res=await res.json()
+
+document.getElementById("a").innerText=res.answer
+
+}
+
+async function reports(){
+
+let brief=await fetch(API+"/manager_brief")
+brief=await brief.json()
+
+let email=await fetch(API+"/followup_email")
+email=await email.json()
+
+document.getElementById("main").innerHTML=`
+
+<h1 class="text-3xl font-bold mb-6">Reports</h1>
+
+<div class="bg-white p-6 rounded shadow mb-6">
+
+<h2 class="font-bold mb-2">Manager Brief</h2>
+
+<pre>${brief.brief}</pre>
+
+</div>
+
+<div class="bg-white p-6 rounded shadow">
+
+<h2 class="font-bold mb-2">Follow-up Email</h2>
+
+<pre>${email.email}</pre>
+
+</div>
+
+`
+
+}
+
+dashboard()
+
+</script>
+
+</body>
+</html>

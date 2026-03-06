@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FollowThrough AI Command Center</title>
+
+<style>
+
+body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:#f4f6f8;
+margin:0;
+padding:30px;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.nav{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.nav button{
+padding:8px 14px;
+border-radius:8px;
+border:none;
+background:#4a36c5;
+color:white;
+cursor:pointer;
+font-weight:600;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:20px;
+}
+
+.card{
+background:white;
+padding:18px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.card h3{
+margin-top:0;
+margin-bottom:10px;
+}
+
+pre{
+white-space:pre-wrap;
+font-size:13px;
+background:#fafafa;
+padding:10px;
+border-radius:6px;
+overflow:auto;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>FollowThrough AI Command Center</h1>
+
+<div class="nav">
+<button onclick="goHome()">← Back</button>
+<button onclick="loadDashboard()">Refresh</button>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h3>Company Brain</h3>
+<pre id="brain">Loading...</pre>
+</div>
+
+<div class="card">
+<h3>Dependencies</h3>
+<pre id="deps">Loading...</pre>
+</div>
+
+<div class="card">
+<h3>Project Simulation</h3>
+<pre id="sim">Loading...</pre>
+</div>
+
+<div class="card">
+<h3>Insights</h3>
+<pre id="insights">Loading...</pre>
+</div>
+
+<div class="card">
+<h3>Predictions</h3>
+<pre id="pred">Loading...</pre>
+</div>
+
+<div class="card">
+<h3>Meeting Timeline</h3>
+<pre id="timeline">Loading...</pre>
+</div>
+
+</div>
+
+<script>
+
+const API="http://127.0.0.1:8000"
+
+function goHome(){
+window.location.href="index.html"
+}
+
+async function fetchData(endpoint, element){
+
+try{
+
+const res=await fetch(API+endpoint)
+
+const data=await res.json()
+
+document.getElementById(element).innerText=
+JSON.stringify(data,null,2)
+
+}catch(err){
+
+document.getElementById(element).innerText=
+"Error loading "+endpoint
+
+}
+
+}
+
+function loadDashboard(){
+
+fetchData("/company_brain","brain")
+fetchData("/dependencies","deps")
+fetchData("/simulate_project","sim")
+fetchData("/insights","insights")
+fetchData("/predictions","pred")
+fetchData("/meeting_timeline","timeline")
+
+}
+
+loadDashboard()
+
+</script>
+
+</body>
+</html>

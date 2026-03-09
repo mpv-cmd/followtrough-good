@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File
-from services.meeting_service import process_meeting
+from backend.services.meeting_service import process_meeting
 
 router = APIRouter(prefix="/meetings", tags=["Meetings"])
 

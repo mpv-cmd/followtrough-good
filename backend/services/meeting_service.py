@@ -4,7 +4,7 @@
 
 from typing import Dict, Any
 
-from memory_engine import remember_meeting, get_recent_context
+from backend.memory_engine import remember_meeting, get_recent_context
 from company_brain import build_company_brain
 
 from transcribe import transcribe_file

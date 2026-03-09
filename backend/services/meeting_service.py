@@ -5,21 +5,25 @@
 from typing import Dict, Any
 
 from backend.memory_engine import remember_meeting, get_recent_context
-from company_brain import build_company_brain
+from backend.company_brain import build_company_brain
 
-from transcribe import transcribe_file
-from summarize_meeting import summarize_meeting
-from extract_action import extract_actions
+from backend.transcribe import transcribe_file
+from backend.summarize_meeting import summarize_meeting
+from backend.extract_action import extract_actions
 
 
 def process_meeting(workspace: str, audio_path: str) -> Dict[str, Any]:
 
-    result = process_meeting(workspace, path)
+    # 1️⃣ Transcribe audio
+    transcript = transcribe_file(audio_path)
 
-    transcript = result["transcript"]
-    summary = result["summary"]
-    actions = result["actions"]
+    # 2️⃣ Generate summary
+    summary = summarize_meeting(transcript)
 
+    # 3️⃣ Extract actions
+    actions = extract_actions(transcript)
+
+    # 4️⃣ Store in memory
     remember_meeting(
         workspace=workspace,
         transcript=transcript,

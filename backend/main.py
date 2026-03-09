@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db
-from backend.api import meetings
+from backend.api.meetings import router as meetings_router
 from backend.api import tasks
 from backend.api import company
 from backend.api import agent
@@ -181,7 +181,7 @@ Provide a clear, concise, practical answer.
         raise HTTPException(status_code=500, detail="AI response failed")
 
 
-app.include_router(meetings.router)
+app.include_router(meetings_router)
 app.include_router(tasks.router)
 app.include_router(company.router)
 app.include_router(agent.router)

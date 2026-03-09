@@ -1,74 +1,145 @@
 # =========================
 # FILE: backend/semantic_memory.py
+# Optimized Cloud Version
 # =========================
 
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+import threading
 
 from memory_engine import load_memory
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# ----------------------------------------------------
+# GLOBALS
+# ----------------------------------------------------
+
+_model = None
+_index = None
+_metadata = None
+_workspace_loaded = None
+_lock = threading.Lock()
 
 
+# ----------------------------------------------------
+# LOAD MODEL (LAZY)
+# ----------------------------------------------------
+def get_model():
+
+    global _model
+
+    if _model is None:
+        print("Loading embedding model...")
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    return _model
+
+
+# ----------------------------------------------------
+# BUILD INDEX
+# ----------------------------------------------------
 def build_index(workspace: str):
 
-    memory = load_memory(workspace)
+    global _index
+    global _metadata
+    global _workspace_loaded
 
-    meetings = memory.get("meetings", [])
+    with _lock:
 
-    texts = []
-    metadata = []
+        memory = load_memory(workspace)
+        meetings = memory.get("meetings", [])
 
-    for m in meetings:
+        texts = []
+        metadata = []
 
-        transcript = m.get("transcript", "")
-        summary = m.get("summary", "")
+        for i, m in enumerate(meetings):
 
-        if transcript:
-            texts.append(transcript)
-            metadata.append({"type": "transcript"})
+            transcript = m.get("transcript", "")
+            summary = m.get("summary", "")
 
-        if summary:
-            texts.append(summary)
-            metadata.append({"type": "summary"})
+            if transcript:
+                texts.append(transcript)
+                metadata.append({"meeting_index": i, "type": "transcript"})
 
-    if not texts:
-        return None, None
+            if summary:
+                texts.append(summary)
+                metadata.append({"meeting_index": i, "type": "summary"})
 
-    embeddings = model.encode(texts)
+        if not texts:
+            _index = None
+            _metadata = None
+            return
 
-    dim = embeddings.shape[1]
+        model = get_model()
 
-    index = faiss.IndexFlatL2(dim)
+        embeddings = model.encode(texts, normalize_embeddings=True)
 
-    index.add(np.array(embeddings))
+        dim = embeddings.shape[1]
 
-    return index, metadata
+        index = faiss.IndexFlatIP(dim)
+
+        index.add(np.array(embeddings))
+
+        _index = index
+        _metadata = metadata
+        _workspace_loaded = workspace
 
 
-def semantic_search(workspace: str, query: str, k: int = 3):
+# ----------------------------------------------------
+# ENSURE INDEX
+# ----------------------------------------------------
+def ensure_index(workspace: str):
 
-    index, metadata = build_index(workspace)
+    global _workspace_loaded
 
-    if index is None:
+    if _workspace_loaded != workspace:
+        build_index(workspace)
+
+
+# ----------------------------------------------------
+# SEARCH
+# ----------------------------------------------------
+def semantic_search(workspace: str, query: str, k: int = 5):
+
+    ensure_index(workspace)
+
+    if _index is None:
         return []
 
-    query_vec = model.encode([query])
+    model = get_model()
 
-    distances, ids = index.search(np.array(query_vec), k)
+    query_vec = model.encode([query], normalize_embeddings=True)
+
+    distances, ids = _index.search(np.array(query_vec), k)
+
+    memory = load_memory(workspace)
+    meetings = memory.get("meetings", [])
 
     results = []
 
-    memory = load_memory(workspace)
-
-    meetings = memory.get("meetings", [])
+    seen = set()
 
     for idx in ids[0]:
 
-        if idx >= len(meetings):
+        if idx < 0 or idx >= len(_metadata):
             continue
 
-        results.append(meetings[idx])
+        meeting_index = _metadata[idx]["meeting_index"]
+
+        if meeting_index in seen:
+            continue
+
+        seen.add(meeting_index)
+
+        if meeting_index < len(meetings):
+            results.append(meetings[meeting_index])
 
     return results
+
+
+# ----------------------------------------------------
+# REBUILD INDEX (WHEN NEW MEETING SAVED)
+# ----------------------------------------------------
+def refresh_index(workspace: str):
+
+    build_index(workspace)

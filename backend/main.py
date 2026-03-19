@@ -8,12 +8,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import db
-from .api.meetings import router as meetings_router
-from .memory_engine import get_recent_context
+from backend import db
+from backend.api.meetings import router as meetings_router
+from backend.memory_engine import get_recent_context
 
 try:
-    from .semantic_memory import semantic_search
+    from backend.semantic_memory import semantic_search
 except Exception:
     semantic_search = None
 

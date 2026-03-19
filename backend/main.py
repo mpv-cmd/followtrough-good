@@ -8,12 +8,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend import db
-from backend.api.meetings import router as meetings_router
-from backend.memory_engine import get_recent_context
+from . import db
+from .api.meetings import router as meetings_router
+from .memory_engine import get_recent_context
 
 try:
-    from backend.semantic_memory import semantic_search
+    from .semantic_memory import semantic_search
 except Exception:
     semantic_search = None
 
@@ -118,6 +118,7 @@ async def copilot(payload: Dict[str, Any], workspace: str = "default"):
         raise HTTPException(status_code=400, detail="Missing question")
 
     ws = _safe_workspace(workspace)
+
     logger.info(f"Copilot question received (workspace={ws})")
 
     meetings_data: List[Dict[str, Any]] = []

@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db
 from backend.api.meetings import router as meetings_router
-from backend.api import tasks
 from backend.api import company
 from backend.api import agent
 from backend.api import analytics
@@ -22,6 +21,9 @@ except Exception:
     semantic_search = None
 
 
+# ------------------------
+# CONFIG
+# ------------------------
 load_dotenv()
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
@@ -29,6 +31,10 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("followthrough")
 
+
+# ------------------------
+# APP INIT
+# ------------------------
 app = FastAPI(
     title="FollowThrough AI",
     version="1.0",
@@ -39,16 +45,19 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
+# ------------------------
+# HELPERS
+# ------------------------
 def _safe_workspace(name: str) -> str:
     if not name:
         return "default"
-    name = name.strip()
-    return name or "default"
+    return name.strip() or "default"
 
 
 def _build_context(meetings_data: List[Dict[str, Any]]) -> str:
@@ -59,10 +68,7 @@ def _build_context(meetings_data: List[Dict[str, Any]]) -> str:
         actions = m.get("actions", [])
         transcript = m.get("transcript", "")
 
-        if isinstance(summary, dict):
-            summary_text = summary.get("summary") or str(summary)
-        else:
-            summary_text = str(summary)
+        summary_text = summary.get("summary") if isinstance(summary, dict) else str(summary)
 
         actions_text = "\n".join(
             f"- {a.get('action', 'Unknown action')}"
@@ -78,16 +84,19 @@ Meeting Summary:
 {summary_text}
 
 Actions:
-{actions_text if actions_text else "None"}
+{actions_text or "None"}
 
 Transcript Snippet:
-{transcript_snippet if transcript_snippet else "None"}
+{transcript_snippet or "None"}
 """.strip()
         )
 
     return "\n\n---\n\n".join(context_blocks)
 
 
+# ------------------------
+# LIFECYCLE
+# ------------------------
 @app.on_event("startup")
 def startup():
     logger.info("Starting FollowThrough API")
@@ -95,6 +104,9 @@ def startup():
     logger.info("Database initialized")
 
 
+# ------------------------
+# BASIC ROUTES
+# ------------------------
 @app.get("/")
 def root():
     return {
@@ -114,6 +126,9 @@ def ready():
     return {"ready": True}
 
 
+# ------------------------
+# COPILOT
+# ------------------------
 @app.post("/copilot")
 async def copilot(payload: Dict[str, Any], workspace: str = "default"):
     question = (payload.get("question") or "").strip()
@@ -181,8 +196,10 @@ Provide a clear, concise, practical answer.
         raise HTTPException(status_code=500, detail="AI response failed")
 
 
+# ------------------------
+# ROUTERS (ONLY EXISTING ONES)
+# ------------------------
 app.include_router(meetings_router)
-app.include_router(tasks.router)
 app.include_router(company.router)
 app.include_router(agent.router)
 app.include_router(analytics.router)

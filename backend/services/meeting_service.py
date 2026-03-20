@@ -1,63 +1,83 @@
-# =========================
-# FILE: backend/services/meeting_service.py
-# =========================
+from __future__ import annotations
 
-from typing import Dict, Any
+import json
+from typing import Any, Dict, Optional
 
-from backend.memory_engine import remember_meeting, get_recent_context
+from backend import db
 from backend.company_brain import build_company_brain
-
-from backend.transcribe import transcribe_file
-from backend.summarize_meeting import summarize_meeting
 from backend.extract_action import extract_actions
+from backend.memory_engine import get_recent_context, remember_meeting
+from backend.semantic_memory import refresh_index
+from backend.summarize_meeting import summarize_meeting
+from backend.transcribe import transcribe_file
 
 
-def process_meeting(workspace: str, audio_path: str) -> Dict[str, Any]:
+def process_meeting(
+    workspace: str,
+    audio_path: str,
+    upload_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    workspace = (workspace or "default").strip() or "default"
 
-    # 1️⃣ Transcribe audio
-    transcript = transcribe_file(audio_path)
+    if upload_id:
+        db.set_upload_status(upload_id, "processing")
 
-    # 2️⃣ Generate summary
-    summary = summarize_meeting(transcript)
+    try:
+        transcript = transcribe_file(audio_path)
+        summary = summarize_meeting(transcript)
+        actions = extract_actions(transcript)
 
-    # 3️⃣ Extract actions
-    actions = extract_actions(transcript)
+        remember_meeting(
+            workspace=workspace,
+            transcript=transcript,
+            summary=summary,
+            actions=actions,
+        )
 
-    # 4️⃣ Store in memory
-    remember_meeting(
-        workspace=workspace,
-        transcript=transcript,
-        summary=summary,
-        actions=actions
-    )
+        try:
+            refresh_index(workspace)
+        except Exception:
+            pass
 
-    return {
-        "transcript": transcript,
-        "summary": summary,
-        "actions": actions
-    }
+        result = {
+            "transcript": transcript,
+            "summary": summary,
+            "actions": actions,
+        }
+
+        if upload_id:
+            db.save_upload_result(
+                upload_id=upload_id,
+                transcript=transcript,
+                summary_json=json.dumps(summary or {}, ensure_ascii=False),
+                actions=actions,
+            )
+
+        return result
+
+    except Exception as e:
+        if upload_id:
+            db.set_upload_status(upload_id, "failed", str(e))
+        raise
 
 
-def build_workspace_brain(workspace: str):
-
-    meetings = get_recent_context(workspace)
-
-    brain = build_company_brain(meetings)
-
-    return brain
+def build_workspace_brain(workspace: str) -> Any:
+    workspace = (workspace or "default").strip() or "default"
+    meetings = get_recent_context(workspace, limit=20)
+    return build_company_brain(meetings)
 
 
-def analyze_latest_meeting(workspace: str):
-
-    meetings = get_recent_context(workspace)
+def analyze_latest_meeting(workspace: str) -> Optional[Dict[str, Any]]:
+    workspace = (workspace or "default").strip() or "default"
+    meetings = get_recent_context(workspace, limit=1)
 
     if not meetings:
         return None
 
-    latest = meetings[-1]
+    latest = meetings[0]
 
     return {
         "transcript": latest.get("transcript"),
         "summary": latest.get("summary"),
-        "actions": latest.get("actions")
+        "actions": latest.get("actions"),
     }

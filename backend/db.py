@@ -23,6 +23,11 @@ def get_conn() -> sqlite3.Connection:
     return conn
 
 
+def _column_exists(conn: sqlite3.Connection, table_name: str, column_name: str) -> bool:
+    rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return any(row["name"] == column_name for row in rows)
+
+
 def init_db() -> None:
     with get_conn() as conn:
         conn.executescript(
@@ -75,7 +80,6 @@ def init_db() -> None:
             CREATE INDEX IF NOT EXISTS idx_approvals_ws ON approvals(workspace_id);
             CREATE INDEX IF NOT EXISTS idx_approvals_event ON approvals(event_id);
 
-            -- Step 3: per-workspace Google OAuth token
             CREATE TABLE IF NOT EXISTS google_tokens (
               workspace_id TEXT PRIMARY KEY,
               token_json TEXT NOT NULL,
@@ -84,6 +88,19 @@ def init_db() -> None:
             );
             """
         )
+
+        # Safe migrations for existing Railway DBs
+        if not _column_exists(conn, "uploads", "status"):
+            conn.execute("ALTER TABLE uploads ADD COLUMN status TEXT NOT NULL DEFAULT 'uploaded'")
+
+        if not _column_exists(conn, "uploads", "error_message"):
+            conn.execute("ALTER TABLE uploads ADD COLUMN error_message TEXT")
+
+        if not _column_exists(conn, "uploads", "transcript"):
+            conn.execute("ALTER TABLE uploads ADD COLUMN transcript TEXT")
+
+        if not _column_exists(conn, "uploads", "summary_json"):
+            conn.execute("ALTER TABLE uploads ADD COLUMN summary_json TEXT")
 
 
 def ensure_workspace(workspace_id: str) -> None:
@@ -94,17 +111,91 @@ def ensure_workspace(workspace_id: str) -> None:
         )
 
 
-# ---------------- Uploads / Actions ----------------
-def save_upload(workspace_id: str, upload_id: str, filename: str, audio_path: str, actions: List[Dict[str, Any]]) -> None:
+# ---------------- Uploads / Status ----------------
+def create_upload_record(workspace_id: str, upload_id: str, filename: str, audio_path: str) -> None:
     ensure_workspace(workspace_id)
     with get_conn() as conn:
         conn.execute(
-            "INSERT INTO uploads(id, workspace_id, filename, audio_path, created_at, reprocessed_at) VALUES (?, ?, ?, ?, ?, NULL)",
-            (upload_id, workspace_id, filename, audio_path, _now_iso()),
+            """
+            INSERT INTO uploads(
+                id, workspace_id, filename, audio_path, created_at, reprocessed_at, status, error_message, transcript, summary_json
+            ) VALUES (?, ?, ?, ?, ?, NULL, ?, NULL, NULL, NULL)
+            """,
+            (upload_id, workspace_id, filename, audio_path, _now_iso(), "uploaded"),
         )
+
+
+def set_upload_status(upload_id: str, status: str, error_message: Optional[str] = None) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE uploads SET status = ?, error_message = ? WHERE id = ?",
+            (status, error_message, upload_id),
+        )
+
+
+def save_upload_result(
+    upload_id: str,
+    transcript: str,
+    summary_json: str,
+    actions: List[Dict[str, Any]],
+) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """
+            UPDATE uploads
+            SET transcript = ?, summary_json = ?, status = ?, error_message = NULL
+            WHERE id = ?
+            """,
+            (transcript, summary_json, "completed", upload_id),
+        )
+
+        conn.execute("DELETE FROM actions WHERE upload_id = ?", (upload_id,))
+
         for i, a in enumerate(actions or []):
             if not isinstance(a, dict):
                 continue
+
+            conn.execute(
+                """
+                INSERT INTO actions(
+                  upload_id, idx, action_text, owner, deadline, source_sentence, confidence, dedupe_key
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    upload_id,
+                    int(i),
+                    (a.get("action") or "").strip() or None,
+                    (a.get("owner") or None),
+                    (a.get("deadline") or None),
+                    (a.get("source_sentence") or None),
+                    float(a.get("confidence")) if a.get("confidence") is not None else None,
+                    (a.get("dedupe_key") or None),
+                ),
+            )
+
+
+def save_upload(
+    workspace_id: str,
+    upload_id: str,
+    filename: str,
+    audio_path: str,
+    actions: List[Dict[str, Any]],
+) -> None:
+    ensure_workspace(workspace_id)
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO uploads(
+                id, workspace_id, filename, audio_path, created_at, reprocessed_at, status, error_message, transcript, summary_json
+            ) VALUES (?, ?, ?, ?, ?, NULL, ?, NULL, NULL, NULL)
+            """,
+            (upload_id, workspace_id, filename, audio_path, _now_iso(), "completed"),
+        )
+
+        for i, a in enumerate(actions or []):
+            if not isinstance(a, dict):
+                continue
+
             conn.execute(
                 """
                 INSERT INTO actions(
@@ -127,9 +218,11 @@ def save_upload(workspace_id: str, upload_id: str, filename: str, audio_path: st
 def overwrite_actions(upload_id: str, actions: List[Dict[str, Any]]) -> None:
     with get_conn() as conn:
         conn.execute("DELETE FROM actions WHERE upload_id = ?", (upload_id,))
+
         for i, a in enumerate(actions or []):
             if not isinstance(a, dict):
                 continue
+
             conn.execute(
                 """
                 INSERT INTO actions(
@@ -172,6 +265,20 @@ def get_upload(workspace_id: str, upload_id: str) -> Optional[Dict[str, Any]]:
         return dict(row) if row else None
 
 
+def get_upload_status(workspace_id: str, upload_id: str) -> Optional[Dict[str, Any]]:
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT id, workspace_id, filename, created_at, status, error_message, transcript, summary_json
+            FROM uploads
+            WHERE id = ? AND workspace_id = ?
+            """,
+            (upload_id, workspace_id),
+        ).fetchone()
+
+        return dict(row) if row else None
+
+
 def get_actions(upload_id: str) -> List[Dict[str, Any]]:
     with get_conn() as conn:
         rows = conn.execute(
@@ -181,6 +288,7 @@ def get_actions(upload_id: str) -> List[Dict[str, Any]]:
             """,
             (upload_id,),
         ).fetchall()
+
         out: List[Dict[str, Any]] = []
         for r in rows:
             out.append(
@@ -193,6 +301,7 @@ def get_actions(upload_id: str) -> List[Dict[str, Any]]:
                     "dedupe_key": r["dedupe_key"] or "",
                 }
             )
+
         return out
 
 
@@ -206,6 +315,7 @@ def get_approvals_map(workspace_id: str) -> Dict[str, Any]:
             """,
             (workspace_id,),
         ).fetchall()
+
         m: Dict[str, Any] = {}
         for r in rows:
             m[str(r["dedupe_key"])] = {
@@ -216,6 +326,7 @@ def get_approvals_map(workspace_id: str) -> Dict[str, Any]:
                 "upload_id": r["upload_id"],
                 "created_at": r["created_at"],
             }
+
         return m
 
 
@@ -253,7 +364,7 @@ def delete_approval(workspace_id: str, dedupe_key: str) -> bool:
         return cur.rowcount > 0
 
 
-# ---------------- Google tokens (per-workspace) ----------------
+# ---------------- Google tokens ----------------
 def set_google_token(workspace_id: str, token_json: str) -> None:
     ensure_workspace(workspace_id)
     with get_conn() as conn:

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>FollowThrough AI</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+      background:#f6f8fb;
+      display:flex;
+      height:100vh;
+    }
+
+    .sidebar{
+      width:220px;
+      background:#111827;
+      color:white;
+      padding:20px;
+      box-sizing:border-box;
+    }
+
+    .sidebar h2{
+      margin-top:0;
+      margin-bottom:20px;
+    }
+
+    .sidebar button{
+      display:block;
+      width:100%;
+      margin-top:10px;
+      padding:10px;
+      border:none;
+      background:#1f2937;
+      color:white;
+      border-radius:6px;
+      cursor:pointer;
+    }
+
+    .sidebar button:hover{
+      background:#374151;
+    }
+
+    .main{
+      flex:1;
+      padding:30px;
+      overflow:auto;
+      box-sizing:border-box;
+    }
+
+    .card{
+      background:white;
+      padding:16px;
+      border-radius:8px;
+      box-shadow:0 4px 10px rgba(0,0,0,.06);
+      margin-bottom:20px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    input[type="text"], input[type="file"], textarea{
+      width:100%;
+      padding:10px;
+      border:1px solid #d1d5db;
+      border-radius:6px;
+      box-sizing:border-box;
+      font-size:14px;
+    }
+
+    textarea{
+      min-height:120px;
+      resize:vertical;
+    }
+
+    .btn{
+      padding:10px 14px;
+      border:none;
+      border-radius:6px;
+      background:#111827;
+      color:white;
+      cursor:pointer;
+    }
+
+    .btn:hover{
+      background:#374151;
+    }
+
+    .muted{
+      color:#6b7280;
+      font-size:14px;
+    }
+
+    .section-title{
+      margin:0 0 10px 0;
+    }
+
+    pre{
+      white-space:pre-wrap;
+      font-size:13px;
+      background:#f9fafb;
+      padding:12px;
+      border-radius:6px;
+      overflow:auto;
+    }
+
+    ul{
+      padding-left:18px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="sidebar">
+    <h2>FollowThrough</h2>
+
+    <button onclick="showHome()">Home</button>
+    <button onclick="showUpload()">Upload Meeting</button>
+    <button onclick="showCopilot()">Copilot</button>
+    <button onclick="checkHealth()">Health</button>
+  </div>
+
+  <div class="main" id="main"></div>
+
+  <script>
+    const API = "https://followtrough-good-production.up.railway.app/";
+
+    function render(html){
+      document.getElementById("main").innerHTML = html;
+    }
+
+    function showHome(){
+      render(`
+        <div class="card">
+          <h3 class="section-title">Welcome to FollowThrough AI</h3>
+          <p class="muted">Upload a meeting, wait for processing, then inspect transcript, summary, and action items.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Backend</h3>
+          <pre>${API}</pre>
+        </div>
+      `);
+    }
+
+    function showUpload(){
+      render(`
+        <div class="card">
+          <h3 class="section-title">Upload Meeting</h3>
+          <p class="muted">Upload audio, then FollowThrough will transcribe, summarize, and extract actions.</p>
+
+          <label>Workspace</label>
+          <input type="text" id="workspace" value="default" />
+
+          <div style="height:10px"></div>
+
+          <label>Audio file</label>
+          <input type="file" id="fileInput" />
+
+          <div class="row">
+            <button class="btn" onclick="uploadMeeting()">Upload</button>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div id="status" class="muted">Waiting for upload...</div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Result</h3>
+          <div id="resultArea" class="muted">No result yet.</div>
+        </div>
+      `);
+    }
+
+    async function uploadMeeting(){
+      const fileInput = document.getElementById("fileInput");
+      const workspace = document.getElementById("workspace").value.trim() || "default";
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("resultArea");
+
+      if (!fileInput.files.length){
+        alert("Select a file first.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const form = new FormData();
+      form.append("file", file);
+
+      statusEl.innerText = "Uploading...";
+      resultEl.innerHTML = "";
+
+      try{
+        const res = await fetch(`${API}/meetings/upload?workspace=${encodeURIComponent(workspace)}`, {
+          method: "POST",
+          body: form
+        });
+
+        const data = await res.json();
+
+        if (!res.ok){
+          throw new Error(data.detail || "Upload failed");
+        }
+
+        const uploadId = data.upload_id;
+        statusEl.innerText = `Processing started... Upload ID: ${uploadId}`;
+
+        pollStatus(uploadId, workspace);
+      }catch(err){
+        statusEl.innerText = "Upload failed";
+        resultEl.innerHTML = `<pre>${err.message}</pre>`;
+      }
+    }
+
+    async function pollStatus(uploadId, workspace){
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("resultArea");
+
+      const interval = setInterval(async () => {
+        try{
+          const res = await fetch(`${API}/meetings/status/${uploadId}?workspace=${encodeURIComponent(workspace)}`);
+          const data = await res.json();
+
+          if (!res.ok){
+            throw new Error(data.detail || "Status request failed");
+          }
+
+          statusEl.innerText = `Status: ${data.status}`;
+
+          if (data.status === "completed"){
+            clearInterval(interval);
+
+            const result = data.data || {};
+            const summary = result.summary || {};
+            const actions = result.actions || [];
+            const transcript = result.transcript || "";
+
+            resultEl.innerHTML = `
+              <h4>Summary</h4>
+              <pre>${escapeHtml(JSON.stringify(summary, null, 2))}</pre>
+
+              <h4>Actions</h4>
+              ${actions.length
+                ? `<ul>${actions.map(a => `<li>${escapeHtml(a.action || "Untitled action")}</li>`).join("")}</ul>`
+                : `<p class="muted">No actions found.</p>`}
+
+              <h4>Transcript</h4>
+              <pre>${escapeHtml(transcript)}</pre>
+            `;
+          }
+
+          if (data.status === "failed"){
+            clearInterval(interval);
+            resultEl.innerHTML = `<pre>${escapeHtml(data.error || "Processing failed")}</pre>`;
+          }
+        }catch(err){
+          clearInterval(interval);
+          statusEl.innerText = "Polling failed";
+          resultEl.innerHTML = `<pre>${escapeHtml(err.message)}</pre>`;
+        }
+      }, 2000);
+    }
+
+    function showCopilot(){
+      render(`
+        <div class="card">
+          <h3 class="section-title">Copilot</h3>
+
+          <label>Workspace</label>
+          <input type="text" id="copilotWorkspace" value="default" />
+
+          <div style="height:10px"></div>
+
+          <label>Question</label>
+          <textarea id="copilotQuestion" placeholder="Ask something about your meetings..."></textarea>
+
+          <div class="row">
+            <button class="btn" onclick="askCopilot()">Ask</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Answer</h3>
+          <pre id="copilotOutput">No answer yet.</pre>
+        </div>
+      `);
+    }
+
+    async function askCopilot(){
+      const workspace = document.getElementById("copilotWorkspace").value.trim() || "default";
+      const question = document.getElementById("copilotQuestion").value.trim();
+      const output = document.getElementById("copilotOutput");
+
+      if (!question){
+        alert("Write a question first.");
+        return;
+      }
+
+      output.innerText = "Thinking...";
+
+      try{
+        const res = await fetch(`${API}/copilot?workspace=${encodeURIComponent(workspace)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ question })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok){
+          throw new Error(data.detail || "Copilot request failed");
+        }
+
+        output.innerText = data.answer || "No answer returned.";
+      }catch(err){
+        output.innerText = err.message;
+      }
+    }
+
+    async function checkHealth(){
+      render(`
+        <div class="card">
+          <h3 class="section-title">Health Check</h3>
+          <pre id="healthOutput">Checking...</pre>
+        </div>
+      `);
+
+      try{
+        const res = await fetch(`${API}/health`);
+        const data = await res.json();
+        document.getElementById("healthOutput").innerText = JSON.stringify(data, null, 2);
+      }catch(err){
+        document.getElementById("healthOutput").innerText = err.message;
+      }
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    showHome();
+  </script>
+</body>
+</html>

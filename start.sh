@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-PORT="${PORT:-8080}"
+cd /app
+export PYTHONPATH=/app
 
-uvicorn backend.main:app --host 0.0.0.0 --port "$PORT"
+exec uvicorn backend.main:app --host 0.0.0.0 --port "${PORT:-8080}"

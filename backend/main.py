@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import os
 import logging
-from typing import Any, Dict, List
+import os
+from contextlib import asynccontextmanager
+from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, ConfigDict
 
 from backend import db
 from backend.api.meetings import router as meetings_router
@@ -21,122 +23,160 @@ except Exception:
 load_dotenv()
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+ENV = os.getenv("ENV", "dev")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+CORS_ORIGINS_RAW = os.getenv("CORS_ORIGINS", "*")
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
 logger = logging.getLogger("followthrough")
 
-app = FastAPI(
-    title="FollowThrough AI",
-    version="1.0",
-    docs_url="/docs",
-    redoc_url=None,
-)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+def _parse_cors_origins(raw: str) -> list[str]:
+    value = (raw or "*").strip()
+    if value == "*":
+        return ["*"]
+    return [origin.strip() for origin in value.split(",") if origin.strip()]
 
 
-def _safe_workspace(name: str) -> str:
+CORS_ORIGINS = _parse_cors_origins(CORS_ORIGINS_RAW)
+
+
+class CopilotRequest(BaseModel):
+    question: str
+
+    model_config = ConfigDict(extra="allow")
+
+
+class CopilotResponse(BaseModel):
+    answer: str
+
+
+def _safe_workspace(name: str | None) -> str:
     if not name:
         return "default"
-    name = name.strip()
-    return name or "default"
+    cleaned = name.strip()
+    return cleaned or "default"
 
 
-def _build_context(meetings_data: List[Dict[str, Any]]) -> str:
-    context_blocks = []
+def _build_context(meetings_data: list[dict[str, Any]]) -> str:
+    context_blocks: list[str] = []
 
-    for m in meetings_data:
-        summary = m.get("summary", "")
-        actions = m.get("actions", [])
-        transcript = m.get("transcript", "")
+    for meeting in meetings_data:
+        summary = meeting.get("summary", "")
+        actions = meeting.get("actions", [])
+        transcript = meeting.get("transcript", "")
 
         if isinstance(summary, dict):
             summary_text = summary.get("summary") or str(summary)
         else:
-            summary_text = str(summary)
+            summary_text = str(summary or "")
 
-        actions_text = "\n".join(
-            f"- {a.get('action', 'Unknown action')}"
-            for a in actions
-            if isinstance(a, dict)
-        )
+        actions_lines: list[str] = []
+        if isinstance(actions, list):
+            for action in actions:
+                if isinstance(action, dict):
+                    action_text = str(action.get("action", "")).strip()
+                    if action_text:
+                        actions_lines.append(f"- {action_text}")
 
-        transcript_snippet = transcript[:1200] if transcript else ""
+        transcript_text = str(transcript or "")[:1200]
 
         context_blocks.append(
-            f"""
-Meeting Summary:
-{summary_text}
-
-Actions:
-{actions_text if actions_text else "None"}
-
-Transcript Snippet:
-{transcript_snippet if transcript_snippet else "None"}
-""".strip()
+            "\n".join(
+                [
+                    "Meeting Summary:",
+                    summary_text or "None",
+                    "",
+                    "Actions:",
+                    "\n".join(actions_lines) if actions_lines else "None",
+                    "",
+                    "Transcript Snippet:",
+                    transcript_text or "None",
+                ]
+            )
         )
 
     return "\n\n---\n\n".join(context_blocks)
 
 
-@app.on_event("startup")
-def startup():
+@asynccontextmanager
+async def lifespan(_: FastAPI):
     logger.info("Starting FollowThrough API")
     db.init_db()
     logger.info("Database initialized")
+    yield
+    logger.info("Shutting down FollowThrough API")
+
+
+app = FastAPI(
+    title="FollowThrough API",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url=None,
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ORIGINS != ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(meetings_router)
 
 
 @app.get("/")
-def root():
+def root() -> dict[str, str]:
     return {
         "service": "FollowThrough API",
         "status": "running",
-        "environment": os.getenv("ENV", "dev"),
+        "environment": ENV,
     }
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @app.get("/ready")
-def ready():
+def ready() -> dict[str, bool]:
     return {"ready": True}
 
 
-@app.post("/copilot")
-async def copilot(payload: Dict[str, Any], workspace: str = "default"):
-    question = (payload.get("question") or "").strip()
-
+@app.post("/copilot", response_model=CopilotResponse)
+async def copilot(
+    payload: CopilotRequest,
+    workspace: str = Query(default="default"),
+) -> CopilotResponse:
+    question = payload.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Missing question")
 
     ws = _safe_workspace(workspace)
+    logger.info("Copilot question received (workspace=%s)", ws)
 
-    logger.info(f"Copilot question received (workspace={ws})")
+    meetings_data: list[dict[str, Any]] = []
 
-    meetings_data: List[Dict[str, Any]] = []
-
-    if semantic_search:
+    if semantic_search is not None:
         try:
             meetings_data = semantic_search(ws, question, k=5)
-        except Exception as e:
-            logger.warning(f"Semantic search failed: {e}")
+        except Exception:
+            logger.exception("Semantic search failed for workspace=%s", ws)
 
     if not meetings_data:
         try:
             meetings_data = get_recent_context(ws, limit=5)
-        except Exception as e:
-            logger.error(f"Context retrieval failed: {e}")
+        except Exception:
+            logger.exception("Context retrieval failed for workspace=%s", ws)
 
     if not meetings_data:
-        return {"answer": "No meetings found yet."}
+        return CopilotResponse(answer="No meetings found yet.")
 
     context_text = _build_context(meetings_data)
 
@@ -159,22 +199,21 @@ Provide a clear, concise, practical answer.
         from openai import OpenAI
 
         client = OpenAI()
-
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
-                {"role": "system", "content": "You analyze company meeting knowledge."},
+                {
+                    "role": "system",
+                    "content": "You analyze company meeting knowledge.",
+                },
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
         )
 
         answer = response.choices[0].message.content or "No answer generated."
-        return {"answer": answer}
+        return CopilotResponse(answer=answer)
 
-    except Exception as e:
-        logger.error(f"OpenAI request failed: {e}")
+    except Exception:
+        logger.exception("OpenAI request failed")
         raise HTTPException(status_code=500, detail="AI response failed")
-
-
-app.include_router(meetings_router)

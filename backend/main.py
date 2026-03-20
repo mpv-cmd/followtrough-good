@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict
 from backend import db
 from backend.api.meetings import router as meetings_router
 from backend.memory_engine import get_recent_context
+from backend.api.dashboard import router as dashboard_router
 
 try:
     from backend.semantic_memory import semantic_search
@@ -79,8 +80,20 @@ def _build_context(meetings_data: list[dict[str, Any]]) -> str:
             for action in actions:
                 if isinstance(action, dict):
                     action_text = str(action.get("action", "")).strip()
+                    owner = str(action.get("owner", "") or "").strip()
+                    deadline = str(action.get("deadline", "") or "").strip()
+
                     if action_text:
-                        actions_lines.append(f"- {action_text}")
+                        extra = []
+                        if owner:
+                            extra.append(f"owner: {owner}")
+                        if deadline:
+                            extra.append(f"deadline: {deadline}")
+
+                        if extra:
+                            actions_lines.append(f"- {action_text} ({', '.join(extra)})")
+                        else:
+                            actions_lines.append(f"- {action_text}")
 
         transcript_text = str(transcript or "")[:1200]
 
@@ -129,6 +142,7 @@ app.add_middleware(
 
 app.include_router(meetings_router)
 
+app.include_router(dashboard_router)
 
 @app.get("/")
 def root() -> dict[str, str]:
@@ -211,7 +225,10 @@ Provide a clear, concise, practical answer.
             temperature=0.2,
         )
 
-        answer = response.choices[0].message.content or "No answer generated."
+        answer = (response.choices[0].message.content or "").strip()
+        if not answer:
+            answer = "No answer generated."
+
         return CopilotResponse(answer=answer)
 
     except Exception:

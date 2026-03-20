@@ -5,11 +5,11 @@ python-multipart==0.0.9
 
 openai==1.51.2
 
-faster-whisper==1.0.3
-ctranslate2==4.4.0
+faster-whisper==1.2.1
+ctranslate2==4.7.1
 
 sentence-transformers==2.7.0
-faiss-cpu==1.8.0
+faiss-cpu==1.8.0.post1
 
 numpy==1.26.4
 

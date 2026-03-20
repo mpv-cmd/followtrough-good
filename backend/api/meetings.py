@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import uuid
@@ -13,13 +14,20 @@ from ..services.meeting_service import process_meeting
 router = APIRouter(prefix="/meetings", tags=["Meetings"])
 
 UPLOAD_DIR = "uploads"
+logger = logging.getLogger("followthrough")
 
 
 def _process_in_background(workspace: str, file_path: str, upload_id: str) -> None:
     try:
+        logger.info("Starting background processing upload_id=%s workspace=%s file=%s", upload_id, workspace, file_path)
         process_meeting(workspace, file_path, upload_id=upload_id)
-    except Exception as e:
-        print("Background processing failed:", e)
+        logger.info("Finished background processing upload_id=%s", upload_id)
+    except Exception:
+        logger.exception("Background processing failed upload_id=%s", upload_id)
+        try:
+            db.set_upload_status(upload_id, "failed", "Background processing crashed")
+        except Exception:
+            logger.exception("Failed updating upload status after background crash upload_id=%s", upload_id)
 
 
 @router.post("/upload")
@@ -49,6 +57,8 @@ async def upload_meeting(
             audio_path=file_path,
         )
 
+        logger.info("Upload saved upload_id=%s workspace=%s path=%s", upload_id, workspace, file_path)
+
         background_tasks.add_task(_process_in_background, workspace, file_path, upload_id)
 
         return {
@@ -59,6 +69,7 @@ async def upload_meeting(
         }
 
     except Exception as e:
+        logger.exception("Upload failed before background processing")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
     finally:

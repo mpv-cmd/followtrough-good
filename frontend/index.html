@@ -1,744 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FollowThrough AI</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FollowThrough AI</title>
 
-  <style>
-    :root{
-      --bg:#f6f8fb;
-      --card:#ffffff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:#d1d5db;
-      --sidebar:#111827;
-      --sidebar-2:#1f2937;
-      --accent:#2563eb;
-      --success:#166534;
-      --success-bg:#dcfce7;
-      --warn:#92400e;
-      --warn-bg:#fef3c7;
-      --danger:#991b1b;
-      --danger-bg:#fee2e2;
-      --pill:#eef2ff;
-      --pill-text:#3730a3;
-      --shadow:0 4px 12px rgba(0,0,0,.08);
-    }
+<style>
+:root{
+--bg:#f6f8fb;
+--card:#ffffff;
+--text:#111827;
+--muted:#6b7280;
+--line:#d1d5db;
+--sidebar:#111827;
+--sidebar-2:#1f2937;
+--accent:#2563eb;
+--success:#166534;
+--success-bg:#dcfce7;
+--warn:#92400e;
+--warn-bg:#fef3c7;
+--danger:#991b1b;
+--danger-bg:#fee2e2;
+--pill:#eef2ff;
+--pill-text:#3730a3;
+--shadow:0 4px 12px rgba(0,0,0,.08);
+}
 
-    *{
-      box-sizing:border-box;
-    }
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:var(--bg);
+display:flex;
+}
 
-    body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      display:flex;
-      min-height:100vh;
-    }
+.sidebar{
+width:240px;
+background:var(--sidebar);
+color:white;
+padding:20px;
+}
 
-    .sidebar{
-      width:240px;
-      background:var(--sidebar);
-      color:white;
-      padding:22px 18px;
-      flex-shrink:0;
-    }
+.nav-btn{
+display:block;
+width:100%;
+margin-top:10px;
+padding:10px;
+border:none;
+background:var(--sidebar-2);
+color:white;
+border-radius:8px;
+cursor:pointer;
+text-align:left;
+}
 
-    .brand{
-      font-size:24px;
-      font-weight:700;
-      margin:0 0 8px 0;
-    }
+.main{
+flex:1;
+padding:25px;
+}
 
-    .brand-sub{
-      color:#9ca3af;
-      font-size:13px;
-      margin-bottom:22px;
-      line-height:1.45;
-    }
+.card{
+background:white;
+padding:18px;
+border-radius:10px;
+box-shadow:var(--shadow);
+margin-bottom:20px;
+}
 
-    .nav-btn{
-      display:block;
-      width:100%;
-      margin-top:10px;
-      padding:11px 12px;
-      border:none;
-      background:var(--sidebar-2);
-      color:white;
-      border-radius:8px;
-      cursor:pointer;
-      text-align:left;
-      font-size:14px;
-    }
+.btn{
+padding:10px 14px;
+border:none;
+border-radius:8px;
+background:var(--sidebar);
+color:white;
+cursor:pointer;
+}
 
-    .nav-btn:hover{
-      background:#374151;
-    }
+.status{
+margin-top:10px;
+padding:10px;
+border-radius:8px;
+background:#eee;
+}
 
-    .main{
-      flex:1;
-      padding:28px;
-      overflow:auto;
-    }
+.item{
+padding:10px;
+border:1px solid #ddd;
+border-radius:6px;
+margin-bottom:10px;
+}
 
-    .hero{
-      margin-bottom:22px;
-    }
-
-    .hero h1{
-      margin:0 0 8px 0;
-      font-size:30px;
-    }
-
-    .hero p{
-      margin:0;
-      color:var(--muted);
-      max-width:820px;
-      line-height:1.55;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
-      gap:18px;
-    }
-
-    .card{
-      background:var(--card);
-      padding:18px;
-      border-radius:12px;
-      box-shadow:var(--shadow);
-      margin-bottom:18px;
-    }
-
-    .card h3{
-      margin:0 0 12px 0;
-      font-size:18px;
-    }
-
-    .section-title{
-      margin:0 0 12px 0;
-      font-size:18px;
-    }
-
-    .muted{
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.5;
-    }
-
-    label{
-      display:block;
-      margin-bottom:6px;
-      font-size:14px;
-      font-weight:600;
-    }
-
-    input[type="text"],
-    input[type="file"],
-    textarea{
-      width:100%;
-      padding:11px 12px;
-      border:1px solid var(--line);
-      border-radius:8px;
-      font-size:14px;
-      background:white;
-    }
-
-    textarea{
-      min-height:120px;
-      resize:vertical;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    .btn{
-      padding:10px 14px;
-      border:none;
-      border-radius:8px;
-      background:var(--sidebar);
-      color:white;
-      cursor:pointer;
-      font-size:14px;
-    }
-
-    .btn:hover{
-      background:#374151;
-    }
-
-    .btn.secondary{
-      background:#e5e7eb;
-      color:#111827;
-    }
-
-    .btn.secondary:hover{
-      background:#d1d5db;
-    }
-
-    .status{
-      margin-top:14px;
-      padding:12px;
-      border-radius:10px;
-      font-size:14px;
-      line-height:1.45;
-      background:#f3f4f6;
-      color:#374151;
-      border:1px solid #e5e7eb;
-    }
-
-    .status.success{
-      background:var(--success-bg);
-      color:var(--success);
-      border-color:#bbf7d0;
-    }
-
-    .status.warn{
-      background:var(--warn-bg);
-      color:var(--warn);
-      border-color:#fde68a;
-    }
-
-    .status.error{
-      background:var(--danger-bg);
-      color:var(--danger);
-      border-color:#fecaca;
-    }
-
-    .summary-box{
-      line-height:1.55;
-      background:#f9fafb;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      padding:12px;
-      margin-bottom:12px;
-    }
-
-    .list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .item{
-      padding:10px 12px;
-      background:#f9fafb;
-      border-radius:8px;
-      border:1px solid #e5e7eb;
-      line-height:1.45;
-    }
-
-    .pill{
-      display:inline-block;
-      padding:4px 8px;
-      border-radius:999px;
-      font-size:12px;
-      background:var(--pill);
-      color:var(--pill-text);
-      margin-top:6px;
-      margin-right:6px;
-    }
-
-    .pill.owner{
-      background:#dcfce7;
-      color:#166534;
-    }
-
-    .pill.deadline{
-      background:#fee2e2;
-      color:#991b1b;
-    }
-
-    .pill.confidence{
-      background:#f3f4f6;
-      color:#374151;
-    }
-
-    .result-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-
-    .result-grid.full{
-      grid-template-columns:1fr;
-    }
-
-    .mini-title{
-      margin:0 0 8px 0;
-      color:var(--muted);
-      font-size:13px;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-    }
-
-    pre{
-      white-space:pre-wrap;
-      word-break:break-word;
-      font-size:13px;
-      background:#f9fafb;
-      padding:12px;
-      border-radius:8px;
-      overflow:auto;
-      border:1px solid #e5e7eb;
-      max-height:420px;
-      margin:0;
-    }
-
-    .empty{
-      color:#9ca3af;
-      font-style:italic;
-    }
-
-    .link-box{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    a.link-btn{
-      display:inline-block;
-      padding:10px 14px;
-      border-radius:8px;
-      background:var(--accent);
-      color:white;
-      text-decoration:none;
-      font-size:14px;
-    }
-
-    a.link-btn:hover{
-      opacity:.92;
-    }
-
-    @media (max-width: 900px){
-      body{
-        flex-direction:column;
-      }
-
-      .sidebar{
-        width:100%;
-      }
-
-      .result-grid{
-        grid-template-columns:1fr;
-      }
-
-      .main{
-        padding:18px;
-      }
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-  <div class="sidebar">
-    <div class="brand">FollowThrough</div>
-    <div class="brand-sub">
-      Upload meetings, extract action items, and query your meeting memory.
-    </div>
-
-    <button class="nav-btn" onclick="showHome()">Home</button>
-    <button class="nav-btn" onclick="showUpload()">Upload Meeting</button>
-    <button class="nav-btn" onclick="showCopilot()">Copilot</button>
-    <button class="nav-btn" onclick="showDashboardLinks()">Dashboards</button>
-    <button class="nav-btn" onclick="checkHealth()">Health</button>
-  </div>
-
-  <div class="main" id="main"></div>
-
-  <script>
-    const API = "https://followtrough-good-production.up.railway.app";
-
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function render(html){
-      document.getElementById("main").innerHTML = html;
-    }
-
-    function normalizeDeadline(deadline){
-      if(!deadline) return "";
-      if(deadline === "tomorrow") return "Tomorrow";
-      if(deadline === "+7 days") return "Next week";
-      return String(deadline);
-    }
-
-    function showHome(){
-      render(`
-        <div class="hero">
-          <h1>FollowThrough AI</h1>
-          <p>
-            Turn meeting recordings into transcripts, structured summaries, action items, and searchable team memory.
-            This is your command center for uploads, meeting copilot, and live dashboard access.
-          </p>
-        </div>
-
-        <div class="grid">
-          <div class="card">
-            <h3>What it does</h3>
-            <div class="list">
-              <div class="item">Transcribes uploaded meeting audio</div>
-              <div class="item">Creates structured summaries with decisions, risks, and next steps</div>
-              <div class="item">Extracts action items with owners and deadlines</div>
-              <div class="item">Stores meeting memory for dashboard insights and copilot answers</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Quick start</h3>
-            <div class="list">
-              <div class="item">1. Open <strong>Upload Meeting</strong></div>
-              <div class="item">2. Upload your audio file</div>
-              <div class="item">3. Wait for processing to finish</div>
-              <div class="item">4. Open the dashboard for structured output</div>
-            </div>
-
-            <div class="link-box">
-              <a class="link-btn" href="${API}/dashboard?workspace=default" target="_blank">Open Raw Dashboard API</a>
-              <a class="link-btn" href="${API}/docs" target="_blank">Open API Docs</a>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Production backend</h3>
-            <pre>${API}</pre>
-          </div>
-        </div>
-      `);
-    }
-
-    function showDashboardLinks(){
-      render(`
-        <div class="hero">
-          <h1>Dashboards</h1>
-          <p>Use these links to inspect your live workspace data directly.</p>
-        </div>
-
-        <div class="card">
-          <h3>Open live endpoints</h3>
-          <div class="link-box">
-            <a class="link-btn" href="${API}/dashboard?workspace=default" target="_blank">Dashboard API</a>
-            <a class="link-btn" href="${API}/insights?workspace=default" target="_blank">Insights API</a>
-            <a class="link-btn" href="${API}/timeline?workspace=default" target="_blank">Timeline API</a>
-            <a class="link-btn" href="${API}/docs" target="_blank">Swagger Docs</a>
-          </div>
-        </div>
-      `);
-    }
-
-    function showUpload(){
-      render(`
-        <div class="hero">
-          <h1>Upload Meeting</h1>
-          <p>Upload audio, then FollowThrough will transcribe, summarize, and extract action items automatically.</p>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Meeting input</h3>
-
-          <label>Workspace</label>
-          <input type="text" id="workspace" value="default" />
-
-          <div style="height:12px"></div>
-
-          <label>Audio file</label>
-          <input type="file" id="fileInput" accept="audio/*,.m4a,.mp3,.wav,.mp4" />
-
-          <div class="row">
-            <button class="btn" onclick="uploadMeeting()">Upload and Process</button>
-            <button class="btn secondary" onclick="showDashboardLinks()">Open Dashboards</button>
-          </div>
-
-          <div id="statusBox" class="status">Waiting for upload...</div>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Processed result</h3>
-          <div id="resultArea" class="empty">No processed meeting yet.</div>
-        </div>
-      `);
-    }
-
-    async function uploadMeeting(){
-      const fileInput = document.getElementById("fileInput");
-      const workspace = document.getElementById("workspace").value.trim() || "default";
-      const statusEl = document.getElementById("statusBox");
-      const resultEl = document.getElementById("resultArea");
-
-      if (!fileInput.files.length){
-        alert("Select a file first.");
-        return;
-      }
-
-      const file = fileInput.files[0];
-      const form = new FormData();
-      form.append("file", file);
-
-      statusEl.className = "status warn";
-      statusEl.innerText = "Uploading meeting...";
-      resultEl.innerHTML = "";
-
-      try{
-        const res = await fetch(`${API}/meetings/upload?workspace=${encodeURIComponent(workspace)}`, {
-          method: "POST",
-          body: form
-        });
-
-        const data = await res.json();
-
-        if (!res.ok){
-          throw new Error(data.detail || "Upload failed");
-        }
-
-        const uploadId = data.upload_id;
-        statusEl.className = "status warn";
-        statusEl.innerText = `Processing started. Upload ID: ${uploadId}`;
-
-        pollStatus(uploadId, workspace);
-      }catch(err){
-        statusEl.className = "status error";
-        statusEl.innerText = "Upload failed";
-        resultEl.innerHTML = `<pre>${escapeHtml(err.message)}</pre>`;
-      }
-    }
-
-    function renderUploadResult(data, workspace){
-      const resultEl = document.getElementById("resultArea");
-      const result = data.data || {};
-      const summary = result.summary || {};
-      const actions = result.actions || [];
-      const transcript = result.transcript || "";
-
-      const decisions = (summary.decisions || [])
-        .map(x => `<div class="item">${escapeHtml(x)}</div>`)
-        .join("");
-
-      const keyPoints = (summary.key_points || [])
-        .map(x => `<div class="item">${escapeHtml(x)}</div>`)
-        .join("");
-
-      const nextSteps = (summary.next_steps || [])
-        .map(x => `<div class="item">${escapeHtml(x)}</div>`)
-        .join("");
-
-      const risks = (summary.risks || [])
-        .map(x => `<div class="item">${escapeHtml(x)}</div>`)
-        .join("");
-
-      const sortedActions = [...actions].sort((a, b) => {
-        const aUrgent = a.deadline ? 1 : 0;
-        const bUrgent = b.deadline ? 1 : 0;
-        return bUrgent - aUrgent;
-      });
-
-      resultEl.innerHTML = `
-        <div class="summary-box">
-          <strong>${escapeHtml(summary.title || "Meeting Summary")}</strong>
-          <div style="margin-top:8px;">${escapeHtml(summary.summary || "No summary text.")}</div>
-        </div>
-
-        <div class="result-grid">
-          <div>
-            <div class="mini-title">Actions</div>
-            <div class="list">
-              ${
-                sortedActions.length
-                ? sortedActions.map(action => `
-                  <div class="item">
-                    <div><strong>→ ${escapeHtml(action.action || "Untitled action")}</strong></div>
-                    ${action.owner ? `<span class="pill owner">Owner: ${escapeHtml(action.owner)}</span>` : ""}
-                    ${action.deadline ? `<span class="pill deadline">Deadline: ${escapeHtml(normalizeDeadline(action.deadline))}</span>` : ""}
-                    ${action.confidence != null ? `<span class="pill confidence">Confidence: ${Math.round(Number(action.confidence) * 100)}%</span>` : ""}
-                  </div>
-                `).join("")
-                : `<div class="empty">No actions found.</div>`
-              }
-            </div>
-          </div>
-
-          <div>
-            <div class="mini-title">Next Steps</div>
-            <div class="list">${nextSteps || `<div class="empty">None</div>`}</div>
-
-            <div class="mini-title" style="margin-top:14px;">Decisions</div>
-            <div class="list">${decisions || `<div class="empty">None</div>`}</div>
-          </div>
-        </div>
-
-        <div class="result-grid" style="margin-top:14px;">
-          <div>
-            <div class="mini-title">Key Points</div>
-            <div class="list">${keyPoints || `<div class="empty">None</div>`}</div>
-          </div>
-
-          <div>
-            <div class="mini-title">Risks</div>
-            <div class="list">${risks || `<div class="empty">None</div>`}</div>
-          </div>
-        </div>
-
-        <div class="result-grid full" style="margin-top:14px;">
-          <div>
-            <div class="mini-title">Transcript</div>
-            <pre>${escapeHtml(transcript || "No transcript available.")}</pre>
-          </div>
-        </div>
-
-        <div class="link-box">
-          <a class="link-btn" href="${API}/dashboard?workspace=${encodeURIComponent(workspace)}" target="_blank">Open Dashboard API</a>
-          <a class="link-btn" href="${API}/insights?workspace=${encodeURIComponent(workspace)}" target="_blank">Open Insights API</a>
-          <a class="link-btn" href="${API}/timeline?workspace=${encodeURIComponent(workspace)}" target="_blank">Open Timeline API</a>
-        </div>
-      `;
-    }
-
-    async function pollStatus(uploadId, workspace){
-      const statusEl = document.getElementById("statusBox");
-      const resultEl = document.getElementById("resultArea");
-
-      const interval = setInterval(async () => {
-        try{
-          const res = await fetch(`${API}/meetings/status/${uploadId}?workspace=${encodeURIComponent(workspace)}`);
-          const data = await res.json();
-
-          if (!res.ok){
-            throw new Error(data.detail || "Status request failed");
-          }
-
-          if (data.status === "uploaded" || data.status === "processing"){
-            statusEl.className = "status warn";
-            statusEl.innerText = `Status: ${data.status}`;
-            return;
-          }
-
-          if (data.status === "completed"){
-            clearInterval(interval);
-            statusEl.className = "status success";
-            statusEl.innerText = `Processing complete. Upload ID: ${uploadId}`;
-            renderUploadResult(data, workspace);
-            return;
-          }
-
-          if (data.status === "failed"){
-            clearInterval(interval);
-            statusEl.className = "status error";
-            statusEl.innerText = "Processing failed";
-            resultEl.innerHTML = `<pre>${escapeHtml(data.error || "Processing failed")}</pre>`;
-            return;
-          }
-
-          statusEl.className = "status";
-          statusEl.innerText = `Status: ${data.status || "unknown"}`;
-        }catch(err){
-          clearInterval(interval);
-          statusEl.className = "status error";
-          statusEl.innerText = "Polling failed";
-          resultEl.innerHTML = `<pre>${escapeHtml(err.message)}</pre>`;
-        }
-      }, 2000);
-    }
-
-    function showCopilot(){
-      render(`
-        <div class="hero">
-          <h1>Meeting Copilot</h1>
-          <p>Ask questions against the meeting memory stored in your selected workspace.</p>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Ask a question</h3>
-
-          <label>Workspace</label>
-          <input type="text" id="copilotWorkspace" value="default" />
-
-          <div style="height:12px"></div>
-
-          <label>Question</label>
-          <textarea id="copilotQuestion" placeholder="What commitments were made? What are the risks? What should happen next?"></textarea>
-
-          <div class="row">
-            <button class="btn" onclick="askCopilot()">Ask Copilot</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Answer</h3>
-          <pre id="copilotOutput">No answer yet.</pre>
-        </div>
-      `);
-    }
-
-    async function askCopilot(){
-      const workspace = document.getElementById("copilotWorkspace").value.trim() || "default";
-      const question = document.getElementById("copilotQuestion").value.trim();
-      const output = document.getElementById("copilotOutput");
-
-      if (!question){
-        alert("Write a question first.");
-        return;
-      }
-
-      output.innerText = "Thinking...";
-
-      try{
-        const res = await fetch(`${API}/copilot?workspace=${encodeURIComponent(workspace)}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ question })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok){
-          throw new Error(data.detail || "Copilot request failed");
-        }
-
-        output.innerText = data.answer || "No answer returned.";
-      }catch(err){
-        output.innerText = err.message;
-      }
-    }
-
-    async function checkHealth(){
-      render(`
-        <div class="hero">
-          <h1>Health Check</h1>
-          <p>Quick backend availability check for the live deployment.</p>
-        </div>
-
-        <div class="card">
-          <h3 class="section-title">Health response</h3>
-          <pre id="healthOutput">Checking...</pre>
-        </div>
-      `);
-
-      try{
-        const res = await fetch(`${API}/health`);
-        const data = await res.json();
-        document.getElementById("healthOutput").innerText = JSON.stringify(data, null, 2);
-      }catch(err){
-        document.getElementById("healthOutput").innerText = err.message;
-      }
-    }
-
-    showHome();
-  </script>
+<div class="sidebar">
+<h2>FollowThrough</h2>
+
+<button class="nav-btn" onclick="showHome()">Home</button>
+<button class="nav-btn" onclick="showUpload()">Upload</button>
+<button class="nav-btn" onclick="showApprovals()">Approve Actions</button>
+<button class="nav-btn" onclick="showCopilot()">Copilot</button>
+<button class="nav-btn" onclick="showDashboard()">Dashboard</button>
+</div>
+
+<div class="main" id="main"></div>
+
+<script>
+
+const API = "https://followtrough-good-production.up.railway.app";
+
+function render(html){
+document.getElementById("main").innerHTML = html;
+}
+
+function showHome(){
+render(`
+<h1>FollowThrough AI</h1>
+<p>Upload → Extract → Approve → Execute</p>
+`);
+}
+
+/* ================= UPLOAD ================= */
+
+function showUpload(){
+render(`
+<div class="card">
+<h3>Upload Meeting</h3>
+
+<input type="file" id="file">
+
+<br><br>
+
+<button class="btn" onclick="upload()">Upload</button>
+
+<div id="status" class="status"></div>
+</div>
+
+<div class="card">
+<h3>Result</h3>
+<div id="result"></div>
+</div>
+`);
+}
+
+async function upload(){
+
+const file = document.getElementById("file").files[0];
+
+const form = new FormData();
+form.append("file", file);
+
+document.getElementById("status").innerText = "Uploading...";
+
+const res = await fetch(`${API}/meetings/upload?workspace=default`,{
+method:"POST",
+body:form
+});
+
+const data = await res.json();
+
+poll(data.upload_id);
+}
+
+function poll(id){
+
+const interval = setInterval(async()=>{
+
+const res = await fetch(`${API}/meetings/status/${id}?workspace=default`);
+const data = await res.json();
+
+document.getElementById("status").innerText = data.status;
+
+if(data.status==="completed"){
+clearInterval(interval);
+renderResult(data);
+}
+
+},2000);
+}
+
+function renderResult(data){
+
+const actions = data.data.actions || [];
+
+document.getElementById("result").innerHTML = `
+<h4>Actions</h4>
+${actions.map(a=>`
+<div class="item">
+<strong>${a.action}</strong><br>
+${a.owner||""} ${a.deadline||""}
+</div>
+`).join("")}
+
+<br>
+<button class="btn" onclick="showApprovals()">Review Actions</button>
+`;
+}
+
+/* ================= APPROVAL ================= */
+
+function showApprovals(){
+render(`
+<div class="card">
+<h3>Approve Actions</h3>
+
+<button class="btn" onclick="loadApprovals()">Load Actions</button>
+<button class="btn" onclick="approve()">Approve Selected</button>
+
+<div id="approvalStatus" class="status"></div>
+</div>
+
+<div class="card">
+<div id="actions"></div>
+</div>
+
+<div class="card">
+<pre id="resultBox"></pre>
+</div>
+`);
+}
+
+async function loadApprovals(){
+
+const res = await fetch(`${API}/approve/latest?workspace=default`);
+const data = await res.json();
+
+window.upload_id = data.upload_id;
+
+document.getElementById("actions").innerHTML =
+data.actions.map(a=>`
+<div class="item">
+<input type="checkbox" data-i="${a.index}">
+<strong>${a.action}</strong>
+</div>
+`).join("");
+
+document.getElementById("approvalStatus").innerText="Loaded";
+}
+
+async function approve(){
+
+const boxes = [...document.querySelectorAll("input[type=checkbox]:checked")];
+
+const selected = boxes.map(b=>({ index:Number(b.dataset.i) }));
+
+const res = await fetch(`${API}/approve/bulk?workspace=default`,{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body: JSON.stringify({
+upload_id: window.upload_id,
+selected
+})
+});
+
+const data = await res.json();
+
+document.getElementById("resultBox").innerText =
+JSON.stringify(data,null,2);
+}
+
+/* ================= COPILOT ================= */
+
+function showCopilot(){
+render(`
+<div class="card">
+<h3>Ask</h3>
+
+<textarea id="q"></textarea><br><br>
+<button class="btn" onclick="ask()">Ask</button>
+</div>
+
+<div class="card">
+<pre id="out"></pre>
+</div>
+`);
+}
+
+async function ask(){
+
+const q = document.getElementById("q").value;
+
+const res = await fetch(`${API}/copilot?workspace=default`,{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body: JSON.stringify({ question:q })
+});
+
+const data = await res.json();
+
+document.getElementById("out").innerText = data.answer;
+}
+
+/* ================= DASHBOARD ================= */
+
+function showDashboard(){
+window.open(`${API}/dashboard?workspace=default`);
+}
+
+showHome();
+
+</script>
 </body>
 </html>

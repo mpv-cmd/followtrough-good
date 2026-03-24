@@ -347,17 +347,10 @@
 
     function renderSummary(data) {
       const el = document.getElementById("summary");
-      const upload = data?.latest_upload;
-
-      if (!upload || !upload.summary_json) {
-        el.innerHTML = `<div class="empty">No summary available yet.</div>`;
-        return;
-      }
-
-      const summaryObj = parseSummaryJson(upload.summary_json);
+      const summaryObj = data?.summary;
 
       if (!summaryObj) {
-        el.innerHTML = `<div class="summary-box">${escapeHtml(upload.summary_json)}</div>`;
+        el.innerHTML = `<div class="empty">No summary available yet.</div>`;
         return;
       }
 
@@ -490,7 +483,7 @@
 
     function renderTranscript(data) {
       const el = document.getElementById("transcript");
-      const transcript = data?.latest_upload?.transcript;
+      const transcript = data?.transcript;
       el.textContent = transcript || "No transcript available yet.";
     }
 

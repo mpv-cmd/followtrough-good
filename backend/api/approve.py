@@ -4,8 +4,8 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException, Query
 
-from backend.google_calendar import create_event
 from backend import db
+from backend.google_calendar import create_event
 
 router = APIRouter(prefix="/approve", tags=["Approvals"])
 
@@ -14,9 +14,9 @@ def _safe_workspace(workspace: str | None) -> str:
     return (workspace or "default").strip() or "default"
 
 
-def _safe_dedupe_key(action: Dict[str, Any]) -> str:
+def _safe_dedupe_key(action: Dict[str, Any], deadline_override: str | None = None) -> str:
     action_text = str(action.get("action") or "").strip()
-    deadline = str(action.get("deadline") or "").strip()
+    deadline = str(deadline_override or action.get("deadline") or "").strip()
     return f"{deadline}|{action_text}"
 
 
@@ -51,6 +51,8 @@ def latest_actions_for_approval(workspace: str = Query(default="default")):
         if not dedupe_key:
             dedupe_key = _safe_dedupe_key(action)
 
+        approval_info = approvals_map.get(dedupe_key) or {}
+
         normalized = {
             "index": idx,
             "action": action.get("action"),
@@ -60,6 +62,7 @@ def latest_actions_for_approval(workspace: str = Query(default="default")):
             "confidence": action.get("confidence"),
             "dedupe_key": dedupe_key,
             "approved": dedupe_key in approvals_map,
+            "event_id": approval_info.get("event_id", ""),
         }
 
         if dedupe_key in approvals_map:
@@ -105,7 +108,7 @@ def approve_bulk(payload: Dict[str, Any], workspace: str = Query(default="defaul
             "message": "No actions to approve",
         }
 
-    selected_map = {}
+    selected_map: Dict[int, Dict[str, Any]] = {}
     for item in selected:
         if not isinstance(item, dict):
             continue
@@ -116,7 +119,7 @@ def approve_bulk(payload: Dict[str, Any], workspace: str = Query(default="defaul
 
     approved: List[Dict[str, Any]] = []
     skipped: List[Dict[str, Any]] = []
-    event_links: List[str] = []
+    event_links: List[Dict[str, Any]] = []
 
     for idx, action in enumerate(actions):
         if idx not in selected_map:
@@ -125,7 +128,7 @@ def approve_bulk(payload: Dict[str, Any], workspace: str = Query(default="defaul
         selected_item = selected_map[idx]
 
         action_text = str(action.get("action") or "").strip()
-        owner = str(action.get("owner") or "").strip()
+        owner = str(action.get("owner") or "").strip() or None
         deadline = str(
             selected_item.get("deadline")
             or action.get("deadline")
@@ -153,35 +156,41 @@ def approve_bulk(payload: Dict[str, Any], workspace: str = Query(default="defaul
 
         dedupe_key = str(action.get("dedupe_key") or "").strip()
         if not dedupe_key:
-            dedupe_key = f"{deadline}|{action_text}"
+            dedupe_key = _safe_dedupe_key(action, deadline_override=deadline)
 
         event_id = ""
         event_link = ""
         event_error = ""
 
-        try:
-            event = create_event(
-                workspace=workspace,
-                title=action_text,
-                date=deadline,
-                description=f"Owner: {owner or 'Unassigned'}",
-            )
-            event_id = str(
-                event.get("event_id")
-                or event.get("id")
-                or ""
-            ).strip()
-            event_link = str(
-                event.get("event_link")
-                or event.get("link")
-                or ""
-            ).strip()
+        event = create_event(
+            workspace=workspace,
+            title=action_text,
+            date=deadline,
+            description=f"Owner: {owner or 'Unassigned'}",
+            metadata={
+                "source": "followthrough_approval",
+                "workspace": workspace,
+                "upload_id": upload_id,
+                "action_index": idx,
+                "owner": owner or "",
+                "deadline": deadline,
+                "dedupe_key": dedupe_key,
+            },
+        )
 
+        if event.get("success"):
+            event_id = str(event.get("event_id") or "").strip()
+            event_link = str(event.get("event_link") or "").strip()
             if event_link:
-                event_links.append(event_link)
-
-        except Exception as e:
-            event_error = str(e)
+                event_links.append(
+                    {
+                        "index": idx,
+                        "action": action_text,
+                        "event_link": event_link,
+                    }
+                )
+        else:
+            event_error = str(event.get("error") or "").strip()
 
         try:
             db.insert_approval(
@@ -193,16 +202,18 @@ def approve_bulk(payload: Dict[str, Any], workspace: str = Query(default="defaul
                 deadline=deadline,
                 event_id=event_id,
             )
+
             approved.append(
                 {
                     "index": idx,
                     "action": action_text,
-                    "owner": owner or None,
+                    "owner": owner,
                     "deadline": deadline,
                     "dedupe_key": dedupe_key,
                     "event_id": event_id,
                     "event_link": event_link,
                     "event_error": event_error,
+                    "calendar_created": bool(event_id),
                 }
             )
         except Exception:

@@ -1,127 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>FollowThrough AI Command Center</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FollowThrough Dashboard</title>
 
-<style>
+  <style>
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background:#f4f6f8;
+      margin:0;
+      padding:24px;
+      color:#111827;
+    }
 
-body{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-background:#f4f6f8;
-margin:0;
-padding:30px;
-}
+    h1{
+      margin:0 0 8px 0;
+      font-size:30px;
+    }
 
-h1{
-margin-bottom:25px;
-}
+    .sub{
+      color:#6b7280;
+      margin-bottom:24px;
+    }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-gap:20px;
-}
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
 
-.card{
-background:white;
-padding:18px;
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
+    input, button{
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #d1d5db;
+      font-size:14px;
+    }
 
-.card h3{
-margin-top:0;
-margin-bottom:10px;
-}
+    button{
+      background:#111827;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
 
-pre{
-white-space:pre-wrap;
-font-size:13px;
-background:#fafafa;
-padding:10px;
-border-radius:6px;
-overflow:auto;
-}
+    button:hover{
+      background:#1f2937;
+    }
 
-</style>
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+      gap:18px;
+    }
+
+    .card{
+      background:white;
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,.08);
+    }
+
+    .card h3{
+      margin-top:0;
+      margin-bottom:14px;
+      font-size:18px;
+    }
+
+    .muted{
+      color:#6b7280;
+      font-size:14px;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .item{
+      padding:10px 12px;
+      background:#f9fafb;
+      border-radius:8px;
+      border:1px solid #e5e7eb;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;
+      background:#eef2ff;
+      color:#3730a3;
+      margin-top:6px;
+      margin-right:6px;
+    }
+
+    pre{
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:13px;
+      background:#fafafa;
+      padding:12px;
+      border-radius:8px;
+      overflow:auto;
+      border:1px solid #e5e7eb;
+      max-height:420px;
+    }
+
+    .empty{
+      color:#9ca3af;
+      font-style:italic;
+    }
+
+    .summary-box{
+      line-height:1.5;
+      background:#f9fafb;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      padding:12px;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width: 700px){
+      .two-col{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>FollowThrough AI Command Center</h1>
+  <h1>FollowThrough Dashboard</h1>
+  <div class="sub">Live meeting intelligence from your latest uploaded meeting.</div>
 
-<div class="grid">
+  <div class="topbar">
+    <input id="workspace" value="default" placeholder="Workspace" />
+    <button onclick="loadDashboard()">Refresh</button>
+  </div>
 
-<div class="card">
-<h3>Company Brain</h3>
-<pre id="brain">Loading...</pre>
-</div>
+  <div class="grid">
+    <div class="card">
+      <h3>Latest Upload</h3>
+      <div id="latestUpload" class="muted">Loading...</div>
+    </div>
 
-<div class="card">
-<h3>Dependencies</h3>
-<pre id="deps">Loading...</pre>
-</div>
+    <div class="card">
+      <h3>Summary</h3>
+      <div id="summary" class="empty">Loading...</div>
+    </div>
 
-<div class="card">
-<h3>Project Simulation</h3>
-<pre id="sim">Loading...</pre>
-</div>
+    <div class="card">
+      <h3>Actions</h3>
+      <div id="actions" class="empty">Loading...</div>
+    </div>
 
-<div class="card">
-<h3>Insights</h3>
-<pre id="insights">Loading...</pre>
-</div>
+    <div class="card">
+      <h3>Insights</h3>
+      <div id="insights" class="empty">Loading...</div>
+    </div>
 
-<div class="card">
-<h3>Predictions</h3>
-<pre id="pred">Loading...</pre>
-</div>
+    <div class="card">
+      <h3>Meeting Timeline</h3>
+      <div id="timeline" class="empty">Loading...</div>
+    </div>
 
-<div class="card">
-<h3>Meeting Timeline</h3>
-<pre id="timeline">Loading...</pre>
-</div>
+    <div class="card">
+      <h3>Transcript</h3>
+      <pre id="transcript">Loading...</pre>
+    </div>
+  </div>
 
-</div>
+  <script>
+    const API = "https://followtrough-good-production.up.railway.app";
 
-<script>
+    function workspaceValue() {
+      return encodeURIComponent(document.getElementById("workspace").value.trim() || "default");
+    }
 
-const API="http://127.0.0.1:8000"
+    async function fetchJson(endpoint) {
+      const res = await fetch(`${API}${endpoint}`);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.json();
+    }
 
-async function fetchData(endpoint, element){
+    function renderLatestUpload(data) {
+      const el = document.getElementById("latestUpload");
 
-try{
+      if (!data || !data.latest_upload) {
+        el.innerHTML = `<div class="empty">No uploads yet.</div>`;
+        return;
+      }
 
-const res=await fetch(API+endpoint)
-const data=await res.json()
+      const upload = data.latest_upload;
 
-document.getElementById(element).innerText=
-JSON.stringify(data,null,2)
+      el.innerHTML = `
+        <div><strong>Filename:</strong> ${upload.filename || "Unknown"}</div>
+        <div><strong>Status:</strong> ${upload.status || "Unknown"}</div>
+        <div><strong>Created:</strong> ${upload.created_at || "Unknown"}</div>
+        <div><strong>Upload ID:</strong> ${upload.id || "Unknown"}</div>
+      `;
+    }
 
-}catch(err){
+    function renderSummary(data) {
+      const el = document.getElementById("summary");
+      const upload = data?.latest_upload;
 
-document.getElementById(element).innerText=
-"Error loading "+endpoint
+      if (!upload || !upload.summary_json) {
+        el.innerHTML = `<div class="empty">No summary available yet.</div>`;
+        return;
+      }
 
-}
+      let summaryObj = null;
+      try {
+        summaryObj = JSON.parse(upload.summary_json);
+      } catch {
+        summaryObj = null;
+      }
 
-}
+      if (!summaryObj) {
+        el.innerHTML = `<div class="summary-box">${upload.summary_json}</div>`;
+        return;
+      }
 
-function loadDashboard(){
+      const decisions = (summaryObj.decisions || []).map(x => `<div class="item">${x}</div>`).join("");
+      const keyPoints = (summaryObj.key_points || []).map(x => `<div class="item">${x}</div>`).join("");
+      const risks = (summaryObj.risks || []).map(x => `<div class="item">${x}</div>`).join("");
 
-fetchData("/company_brain","brain")
-fetchData("/dependencies","deps")
-fetchData("/simulate_project","sim")
-fetchData("/insights","insights")
-fetchData("/predictions","pred")
-fetchData("/meeting_timeline","timeline")
+      el.innerHTML = `
+        <div class="summary-box">
+          <strong>${summaryObj.title || "Meeting Summary"}</strong>
+          <div style="margin-top:8px;">${summaryObj.summary || "No summary text."}</div>
+        </div>
 
-}
+        <div class="two-col" style="margin-top:12px;">
+          <div>
+            <div class="muted" style="margin-bottom:8px;">Decisions</div>
+            <div class="list">${decisions || `<div class="empty">None</div>`}</div>
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:8px;">Risks</div>
+            <div class="list">${risks || `<div class="empty">None</div>`}</div>
+          </div>
+        </div>
 
-loadDashboard()
+        <div style="margin-top:12px;">
+          <div class="muted" style="margin-bottom:8px;">Key Points</div>
+          <div class="list">${keyPoints || `<div class="empty">None</div>`}</div>
+        </div>
+      `;
+    }
 
-</script>
+    function renderActions(data) {
+      const el = document.getElementById("actions");
+      const actions = data?.actions || [];
 
+      if (!actions.length) {
+        el.innerHTML = `<div class="empty">No actions found.</div>`;
+        return;
+      }
+
+      el.innerHTML = actions.map(action => `
+        <div class="item">
+          <div><strong>${action.action || "Untitled action"}</strong></div>
+          ${action.owner ? `<span class="pill">Owner: ${action.owner}</span>` : ""}
+          ${action.deadline ? `<span class="pill">Deadline: ${action.deadline}</span>` : ""}
+          ${action.confidence != null ? `<span class="pill">Confidence: ${Math.round(action.confidence * 100)}%</span>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function renderInsights(data) {
+      const el = document.getElementById("insights");
+      const insights = data?.insights;
+
+      if (!insights) {
+        el.innerHTML = `<div class="empty">No insights available.</div>`;
+        return;
+      }
+
+      const topTopics = (insights.summary?.top_topics || []).map(topic => `<span class="pill">${topic}</span>`).join("");
+      const people = (insights.people || []).slice(0, 10).map(name => `<span class="pill">${name}</span>`).join("");
+
+      el.innerHTML = `
+        <div><strong>People:</strong> ${insights.summary?.people_count ?? 0}</div>
+        <div><strong>Tasks:</strong> ${insights.summary?.task_count ?? 0}</div>
+        <div><strong>Decisions:</strong> ${insights.summary?.decision_count ?? 0}</div>
+
+        <div style="margin-top:12px;">
+          <div class="muted">Top Topics</div>
+          <div style="margin-top:8px;">${topTopics || `<span class="empty">None</span>`}</div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="muted">People Mentioned</div>
+          <div style="margin-top:8px;">${people || `<span class="empty">None</span>`}</div>
+        </div>
+      `;
+    }
+
+    function renderTimeline(data) {
+      const el = document.getElementById("timeline");
+      const timeline = data?.timeline || [];
+
+      if (!timeline.length) {
+        el.innerHTML = `<div class="empty">No meetings in timeline yet.</div>`;
+        return;
+      }
+
+      el.innerHTML = timeline.map(item => `
+        <div class="item">
+          <div><strong>${item.title || "Meeting"}</strong></div>
+          <div class="muted" style="margin-top:6px;">Actions: ${(item.actions || []).length}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderTranscript(data) {
+      const el = document.getElementById("transcript");
+      const transcript = data?.latest_upload?.transcript;
+
+      el.textContent = transcript || "No transcript available yet.";
+    }
+
+    async function loadDashboard() {
+      const ws = workspaceValue();
+
+      try {
+        const dashboard = await fetchJson(`/dashboard?workspace=${ws}`);
+        renderLatestUpload(dashboard);
+        renderSummary(dashboard);
+        renderActions(dashboard);
+        renderTranscript(dashboard);
+      } catch (err) {
+        document.getElementById("latestUpload").innerHTML = `<div class="empty">Failed loading dashboard.</div>`;
+        document.getElementById("summary").innerHTML = `<div class="empty">Failed loading summary.</div>`;
+        document.getElementById("actions").innerHTML = `<div class="empty">Failed loading actions.</div>`;
+        document.getElementById("transcript").textContent = "Failed loading transcript.";
+      }
+
+      try {
+        const insights = await fetchJson(`/insights?workspace=${ws}`);
+        renderInsights(insights);
+      } catch (err) {
+        document.getElementById("insights").innerHTML = `<div class="empty">Failed loading insights.</div>`;
+      }
+
+      try {
+        const timeline = await fetchJson(`/timeline?workspace=${ws}`);
+        renderTimeline(timeline);
+      } catch (err) {
+        document.getElementById("timeline").innerHTML = `<div class="empty">Failed loading timeline.</div>`;
+      }
+    }
+
+    loadDashboard();
+  </script>
 </body>
 </html>

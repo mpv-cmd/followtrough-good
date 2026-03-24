@@ -844,9 +844,55 @@
           throw new Error(data.detail || "Approval request failed");
         }
 
-        resultEl.textContent = JSON.stringify(data, null, 2);
-        statusEl.className = "status success";
-        statusEl.innerText = `Approved ${data.approved?.length || 0} actions. Skipped ${data.skipped?.length || 0}.`;
+        let html = `
+  <div class="summary-box">
+    <strong>Approved ${data.approved?.length || 0} actions</strong><br>
+    Skipped ${data.skipped?.length || 0}
+  </div>
+`;
+
+if (data.approved?.length) {
+  html += `<div class="mini-title">Approved Actions</div>`;
+
+  html += data.approved.map(item => `
+    <div class="item">
+      <div><strong>${escapeHtml(item.action || "Untitled action")}</strong></div>
+
+      ${item.owner ? `<span class="pill owner">Owner: ${escapeHtml(item.owner)}</span>` : ""}
+      ${item.deadline ? `<span class="pill deadline">Deadline: ${escapeHtml(normalizeDeadline(item.deadline))}</span>` : ""}
+
+      ${
+        item.event_link
+          ? `<div style="margin-top:10px;">
+              <a class="link-btn" href="${item.event_link}" target="_blank">Open in Google Calendar</a>
+            </div>`
+          : item.event_error
+            ? `<div class="muted" style="margin-top:8px; color:#b91c1c;">
+                Calendar error: ${escapeHtml(item.event_error)}
+              </div>`
+            : `<div class="muted" style="margin-top:8px;">
+                Calendar not connected or event not created.
+              </div>`
+      }
+    </div>
+  `).join("");
+}
+
+if (data.skipped?.length) {
+  html += `<div class="mini-title" style="margin-top:14px;">Skipped</div>`;
+  html += data.skipped.map(item => `
+    <div class="item">
+      <strong>${escapeHtml(item.action || "Unknown action")}</strong><br>
+      <span class="muted">${escapeHtml(item.reason || "Unknown reason")}</span>
+    </div>
+  `).join("");
+}
+
+resultEl.innerHTML = html;
+statusEl.className = "status success";
+statusEl.innerText = `Approved ${data.approved?.length || 0} actions. Skipped ${data.skipped?.length || 0}.`;
+
+await loadApprovals();
 
         await loadApprovals();
       }catch(err){

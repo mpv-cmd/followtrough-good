@@ -11,9 +11,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
 
 from backend import db
+from backend.api.approve import router as approve_router
+from backend.api.dashboard import router as dashboard_router
 from backend.api.meetings import router as meetings_router
 from backend.memory_engine import get_recent_context
-from backend.api.dashboard import router as dashboard_router
 
 try:
     from backend.semantic_memory import semantic_search
@@ -141,8 +142,9 @@ app.add_middleware(
 )
 
 app.include_router(meetings_router)
-
 app.include_router(dashboard_router)
+app.include_router(approve_router)
+
 
 @app.get("/")
 def root() -> dict[str, str]:

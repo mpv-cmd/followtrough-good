@@ -183,6 +183,14 @@
       background:#d1d5db;
     }
 
+    .btn.danger{
+      background:#991b1b;
+    }
+
+    .btn.danger:hover{
+      background:#7f1d1d;
+    }
+
     .status{
       margin-top:14px;
       padding:12px;
@@ -235,6 +243,25 @@
       line-height:1.45;
     }
 
+    .approval-item{
+      padding:14px;
+      background:#f9fafb;
+      border-radius:10px;
+      border:1px solid #e5e7eb;
+      margin-bottom:12px;
+    }
+
+    .approval-top{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .approval-checkbox{
+      margin-top:4px;
+      transform:scale(1.2);
+    }
+
     .pill{
       display:inline-block;
       padding:4px 8px;
@@ -259,6 +286,11 @@
     .pill.confidence{
       background:#f3f4f6;
       color:#374151;
+    }
+
+    .pill.approved{
+      background:#dcfce7;
+      color:#166534;
     }
 
     .result-grid{
@@ -342,11 +374,12 @@
   <div class="sidebar">
     <div class="brand">FollowThrough</div>
     <div class="brand-sub">
-      Upload meetings, extract action items, and query your meeting memory.
+      Upload meetings, extract action items, approve them, and query your meeting memory.
     </div>
 
     <button class="nav-btn" onclick="showHome()">Home</button>
     <button class="nav-btn" onclick="showUpload()">Upload Meeting</button>
+    <button class="nav-btn" onclick="showApprovals()">Approve Actions</button>
     <button class="nav-btn" onclick="showCopilot()">Copilot</button>
     <button class="nav-btn" onclick="showDashboardLinks()">Dashboards</button>
     <button class="nav-btn" onclick="checkHealth()">Health</button>
@@ -382,7 +415,7 @@
         <div class="hero">
           <h1>FollowThrough App</h1>
           <p>
-            Upload meeting recordings, get structured summaries and action items, then explore the meeting memory through dashboard and copilot views.
+            Upload meeting recordings, get structured summaries and action items, approve the important tasks, then explore the meeting memory through dashboard and copilot views.
           </p>
         </div>
 
@@ -393,7 +426,7 @@
               <div class="item">Upload audio from a meeting</div>
               <div class="item">Transcribe and summarize automatically</div>
               <div class="item">Extract owners, deadlines, and next steps</div>
-              <div class="item">Use copilot to query what happened</div>
+              <div class="item">Approve the tasks you actually want to execute</div>
             </div>
           </div>
 
@@ -452,7 +485,7 @@
 
           <div class="row">
             <button class="btn" onclick="uploadMeeting()">Upload and Process</button>
-            <button class="btn secondary" onclick="showDashboardLinks()">Open Dashboards</button>
+            <button class="btn secondary" onclick="showApprovals()">Approve Actions</button>
           </div>
 
           <div id="statusBox" class="status">Waiting for upload...</div>
@@ -580,9 +613,9 @@
         </div>
 
         <div class="link-box">
+          <button class="btn" onclick="showApprovals('${encodeURIComponent(workspace)}')">Review Approvals</button>
           <a class="link-btn" href="${API}/dashboard?workspace=${encodeURIComponent(workspace)}" target="_blank">Open Dashboard API</a>
           <a class="link-btn" href="${API}/insights?workspace=${encodeURIComponent(workspace)}" target="_blank">Open Insights API</a>
-          <a class="link-btn" href="${API}/timeline?workspace=${encodeURIComponent(workspace)}" target="_blank">Open Timeline API</a>
         </div>
       `;
     }
@@ -631,6 +664,205 @@
           resultEl.innerHTML = `<pre>${escapeHtml(err.message)}</pre>`;
         }
       }, 2000);
+    }
+
+    function showApprovals(prefilledWorkspace = "default"){
+      const workspace = decodeURIComponent(prefilledWorkspace || "default");
+
+      render(`
+        <div class="hero">
+          <h1>Approve Actions</h1>
+          <p>Review extracted actions from the latest upload, choose the ones that matter, then approve them for execution.</p>
+        </div>
+
+        <div class="card">
+          <label>Workspace</label>
+          <input type="text" id="approvalWorkspace" value="${escapeHtml(workspace)}" />
+
+          <div class="row">
+            <button class="btn" onclick="loadApprovals()">Load Latest Actions</button>
+            <button class="btn secondary" onclick="approveSelected()">Approve Selected</button>
+            <button class="btn danger" onclick="resetApprovals()">Reset All Approvals</button>
+          </div>
+
+          <div id="approvalStatus" class="status">Load the latest actions to start reviewing.</div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Approval Queue</h3>
+          <div id="approvalList" class="empty">No actions loaded yet.</div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">Approval Result</h3>
+          <pre id="approvalResult">No approval action yet.</pre>
+        </div>
+      `);
+    }
+
+    async function loadApprovals(){
+      const workspace = document.getElementById("approvalWorkspace").value.trim() || "default";
+      const statusEl = document.getElementById("approvalStatus");
+      const listEl = document.getElementById("approvalList");
+      const resultEl = document.getElementById("approvalResult");
+
+      statusEl.className = "status warn";
+      statusEl.innerText = "Loading latest actions...";
+
+      try{
+        const res = await fetch(`${API}/approve/latest?workspace=${encodeURIComponent(workspace)}`);
+        const data = await res.json();
+
+        if (!res.ok){
+          throw new Error(data.detail || "Failed loading approval queue");
+        }
+
+        window.__approvalUploadId = data.upload_id || null;
+        window.__approvalWorkspace = workspace;
+        window.__approvalData = data;
+
+        resultEl.textContent = JSON.stringify(data, null, 2);
+
+        if (!data.actions || !data.actions.length){
+          statusEl.className = "status";
+          statusEl.innerText = "No actions found in the latest upload.";
+          listEl.innerHTML = `<div class="empty">Nothing to approve yet.</div>`;
+          return;
+        }
+
+        statusEl.className = "status success";
+        statusEl.innerText = `Loaded ${data.actions.length} actions from latest upload.`;
+
+        listEl.innerHTML = data.actions.map(action => `
+          <div class="approval-item">
+            <div class="approval-top">
+              <input
+                class="approval-checkbox"
+                type="checkbox"
+                data-index="${action.index}"
+                data-dedupe-key="${escapeHtml(action.dedupe_key || "")}"
+                ${action.approved ? "checked" : ""}
+              />
+
+              <div style="flex:1;">
+                <div><strong>${escapeHtml(action.action || "Untitled action")}</strong></div>
+
+                ${action.owner ? `<span class="pill owner">Owner: ${escapeHtml(action.owner)}</span>` : ""}
+                ${action.deadline ? `<span class="pill deadline">Deadline: ${escapeHtml(normalizeDeadline(action.deadline))}</span>` : ""}
+                ${action.confidence != null ? `<span class="pill confidence">Confidence: ${Math.round(Number(action.confidence) * 100)}%</span>` : ""}
+                ${action.approved ? `<span class="pill approved">Already approved</span>` : ""}
+
+                <div class="mini-title" style="margin-top:12px;">Edit deadline before approval</div>
+                <input
+                  type="text"
+                  id="deadline-${action.index}"
+                  value="${escapeHtml(action.deadline || "")}"
+                  placeholder="e.g. 2026-03-30"
+                />
+
+                ${action.source_sentence ? `
+                  <div class="mini-title" style="margin-top:12px;">Source sentence</div>
+                  <div class="item">${escapeHtml(action.source_sentence)}</div>
+                ` : ""}
+              </div>
+            </div>
+          </div>
+        `).join("");
+      }catch(err){
+        statusEl.className = "status error";
+        statusEl.innerText = err.message;
+        listEl.innerHTML = `<div class="empty">Failed to load approval queue.</div>`;
+      }
+    }
+
+    async function approveSelected(){
+      const workspace = window.__approvalWorkspace || (document.getElementById("approvalWorkspace")?.value.trim() || "default");
+      const uploadId = window.__approvalUploadId;
+      const statusEl = document.getElementById("approvalStatus");
+      const resultEl = document.getElementById("approvalResult");
+
+      if (!uploadId){
+        alert("Load actions first.");
+        return;
+      }
+
+      const checkboxes = [...document.querySelectorAll(".approval-checkbox:checked")];
+      if (!checkboxes.length){
+        alert("Select at least one action.");
+        return;
+      }
+
+      const selected = checkboxes.map(box => {
+        const index = Number(box.dataset.index);
+        const deadlineInput = document.getElementById(`deadline-${index}`);
+
+        return {
+          index,
+          dedupe_key: box.dataset.dedupeKey || "",
+          deadline: deadlineInput ? deadlineInput.value.trim() : ""
+        };
+      });
+
+      statusEl.className = "status warn";
+      statusEl.innerText = "Approving selected actions...";
+
+      try{
+        const res = await fetch(`${API}/approve/bulk?workspace=${encodeURIComponent(workspace)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            upload_id: uploadId,
+            selected
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok){
+          throw new Error(data.detail || "Approval request failed");
+        }
+
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        statusEl.className = "status success";
+        statusEl.innerText = `Approved ${data.approved?.length || 0} actions. Skipped ${data.skipped?.length || 0}.`;
+
+        await loadApprovals();
+      }catch(err){
+        statusEl.className = "status error";
+        statusEl.innerText = err.message;
+      }
+    }
+
+    async function resetApprovals(){
+      const workspace = window.__approvalWorkspace || (document.getElementById("approvalWorkspace")?.value.trim() || "default");
+      const statusEl = document.getElementById("approvalStatus");
+      const resultEl = document.getElementById("approvalResult");
+
+      statusEl.className = "status warn";
+      statusEl.innerText = "Resetting approvals...";
+
+      try{
+        const res = await fetch(`${API}/approve/reset?workspace=${encodeURIComponent(workspace)}`, {
+          method: "POST"
+        });
+
+        const data = await res.json();
+
+        if (!res.ok){
+          throw new Error(data.detail || "Reset failed");
+        }
+
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        statusEl.className = "status success";
+        statusEl.innerText = "Approvals reset.";
+
+        await loadApprovals();
+      }catch(err){
+        statusEl.className = "status error";
+        statusEl.innerText = err.message;
+      }
     }
 
     function showCopilot(){
